@@ -1,5 +1,9 @@
 # Minimal Code Editor
 
+<p align="center">
+  <img src="assets/banner.png" alt="Minimal Code Editor Promo Card" width="100%" />
+</p>
+
 Minimal is a lightning-fast, distraction-free code editor combining the raw speed of Neovim with the familiar keybindings of VS Code. It runs inside an optimized Kitty terminal profile with a completely isolated configuration.
 
 ---
