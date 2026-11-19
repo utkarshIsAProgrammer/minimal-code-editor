@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# ===================================================================
+# Minimal Code Editor - Wrapper Engine
+# ===================================================================
+set -e
+
+export NVIM_APPNAME="vsc"
+
+KITTY_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/minimal.conf"
+
+# Launch in dedicated Kitty window if kitty is installed
+if command -v kitty >/dev/null 2>&1; then
+    if [ -f "$KITTY_CONF" ]; then
+        exec kitty --config "$KITTY_CONF" --class vsc -T "Minimal" -- nvim "$@"
+    else
+        exec kitty --class vsc -T "Minimal" -- nvim "$@"
+    fi
+elif command -v nvim >/dev/null 2>&1; then
+    # Fallback to direct Neovim (e.g. inside an existing terminal / tmux / SSH)
+    exec nvim "$@"
+else
+    echo "Error: Neither 'kitty' nor 'nvim' was found in your PATH." >&2
+    echo "Please install Neovim (>=0.9.0) and Kitty to run Minimal." >&2
+    exit 1
+fi

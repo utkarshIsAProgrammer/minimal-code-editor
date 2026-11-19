@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Golang Cyan Gradients -->
+    <linearGradient id="goLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5DC9E2"/>
+      <stop offset="50%" stop-color="#00ADD8"/>
+      <stop offset="100%" stop-color="#006C88"/>
+    </linearGradient>
+
+    <linearGradient id="goCenter" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#7EE8FA"/>
+      <stop offset="40%" stop-color="#00ADD8"/>
+      <stop offset="100%" stop-color="#004D61"/>
+    </linearGradient>
+
+    <linearGradient id="goRight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00ADD8"/>
+      <stop offset="60%" stop-color="#6FE5FC"/>
+      <stop offset="100%" stop-color="#E0F7FA"/>
+    </linearGradient>
+
+    <linearGradient id="goBackFold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006C88"/>
+      <stop offset="100%" stop-color="#002D38"/>
+    </linearGradient>
+
+    <!-- Deep 3D drop shadow between overlapping ribbons -->
+    <filter id="ribbonDepth" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="-4" dy="10" stdDeviation="12" flood-color="#00141C" flood-opacity="0.55"/>
+    </filter>
+
+    <!-- Core cyber glow -->
+    <filter id="coreGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 100% TRANSPARENT BACKGROUND (No boxes, no frames) -->
+  <g transform="translate(256, 256) scale(0.96) translate(-256, -256)">
+
+    <!-- LAYER 1: VS Code Rear Loop Fold (Under the right side of the M) -->
+    <path d="M 330,110 
+             L 420,180 
+             C 445,200 445,245 420,265 
+             L 340,335 
+             L 290,285 
+             L 355,225 
+             Z"
+          fill="url(#goBackFold)"
+          opacity="0.95"/>
+
+    <!-- LAYER 2: Left Leg of 'M' (Modern sharp terminal column) -->
+    <!-- (X: 75 to 165, Y: 110 to 410) -->
+    <path d="M 85,130 
+             C 85,105 110,85 135,95 
+             L 170,110 
+             L 170,405 
+             C 170,425 145,435 125,420 
+             L 95,395 
+             C 85,385 85,370 85,355 
+             Z"
+          fill="url(#goLeft)"
+          filter="url(#ribbonDepth)"/>
+
+    <!-- Layer 2 highlight line -->
+    <path d="M 105,140 L 105,370" 
+          stroke="#E0F7FA" 
+          stroke-width="4" 
+          stroke-linecap="round" 
+          opacity="0.6"/>
+
+    <!-- LAYER 3: The Left Diagonal of 'M' diving to the center V (Vim descent) -->
+    <path d="M 165,108 
+             L 256,380 
+             L 215,395 
+             L 125,125 
+             Z"
+          fill="url(#goBackFold)"/>
+
+    <path d="M 155,108 
+             L 256,335 
+             L 225,348 
+             L 140,120 
+             Z"
+          fill="url(#goLeft)"
+          filter="url(#ribbonDepth)"/>
+
+    <!-- LAYER 4: The Right Diagonal of 'M' (Vim ascent & crossover) -->
+    <!-- Creates the sharp, faceted 'V' inside the center of 'M' -->
+    <path d="M 355,108 
+             L 256,335 
+             L 215,220 
+             L 315,95 
+             C 335,85 355,95 355,108 
+             Z"
+          fill="url(#goCenter)"
+          filter="url(#ribbonDepth)"/>
+
+    <!-- LAYER 5: The Right Leg of 'M' with the VS Code Ribbon Bow -->
+    <!-- Climbs up, loops around like VS Code, and descends to form the right foot of M -->
+    <path d="M 345,108 
+             L 385,138 
+             L 385,360 
+             C 385,385 410,405 430,385 
+             L 440,375 
+             L 440,240 
+             L 385,185 
+             Z"
+          fill="url(#goBackFold)"/>
+
+    <path d="M 345,108 
+             L 415,108 
+             C 435,108 445,125 440,145 
+             L 395,305 
+             L 345,260 
+             Z"
+          fill="url(#goRight)"
+          filter="url(#ribbonDepth)"/>
+
+    <!-- LAYER 6: Front VS Code return ribbon flap completing the 'M' -->
+    <path d="M 275,255 
+             L 355,365 
+             C 375,395 425,390 440,355 
+             L 455,270 
+             L 400,270 
+             L 385,315 
+             L 325,230 
+             Z"
+          fill="url(#goRight)"
+          filter="url(#ribbonDepth)"/>
+
+    <!-- CENTERPIECE: Glowing Minimalist Terminal Chevron & Cursor inside the V of M -->
+    <!-- Draws the eye straight to the center of the 'M' -->
+    <polygon points="256,340 274,300 256,280 238,300" 
+             fill="#7EE8FA" 
+             filter="url(#coreGlow)" 
+             opacity="0.95"/>
+    <line x1="285" y1="290" x2="315" y2="290" 
+          stroke="#E0F7FA" 
+          stroke-width="5" 
+          stroke-linecap="round" 
+          filter="url(#coreGlow)" 
+          opacity="0.85"/>
+  </g>
+</svg>

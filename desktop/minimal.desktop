@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Minimal
+GenericName=Code Editor
+Comment=Lightning-fast Minimalist Code Editor
+Exec=minimal %F
+Icon=minimal
+Terminal=false
+Type=Application
+Categories=Development;TextEditor;IDE;
+StartupNotify=true
+MimeType=text/plain;inode/directory;

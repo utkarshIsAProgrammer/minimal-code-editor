@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Golang Cyan Gradients -->
+    <linearGradient id="goLeftPillar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7EE8FA"/>
+      <stop offset="40%" stop-color="#00ADD8"/>
+      <stop offset="100%" stop-color="#006C88"/>
+    </linearGradient>
+
+    <linearGradient id="goCenterV" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#E0F7FA"/>
+      <stop offset="30%" stop-color="#6FE5FC"/>
+      <stop offset="80%" stop-color="#00ADD8"/>
+      <stop offset="100%" stop-color="#004D61"/>
+    </linearGradient>
+
+    <linearGradient id="goRightWing" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#007D9C"/>
+      <stop offset="50%" stop-color="#00ADD8"/>
+      <stop offset="100%" stop-color="#7EE8FA"/>
+    </linearGradient>
+
+    <linearGradient id="goFoldDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#005A70"/>
+      <stop offset="100%" stop-color="#002530"/>
+    </linearGradient>
+
+    <filter id="mDropShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="-4" dy="10" stdDeviation="10" flood-color="#00141C" flood-opacity="0.55"/>
+    </filter>
+
+    <filter id="glowAccent" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 100% TRANSPARENT CANVAS -->
+  <g transform="translate(256, 256) scale(0.96) translate(-256, -256)">
+
+    <!-- LAYER 1: Right Wing Backfold (VS Code ribbon loop under the right peak) -->
+    <path d="M 360,130 
+             L 440,210 
+             C 460,230 460,265 440,285 
+             L 375,350 
+             L 325,300 
+             L 380,245 
+             Z"
+          fill="url(#goFoldDark)"
+          opacity="0.95"/>
+
+    <!-- LAYER 2: Left Leg & Peak of 'M' (Thick, bold, geometric pillar) -->
+    <!-- Starts at bottom left, shoots up to the left peak (X: 160, Y: 95), then slopes into center -->
+    <path d="M 85,395 
+             L 85,210 
+             C 85,175 110,140 145,105 
+             L 165,85 
+             C 185,70 215,80 220,105 
+             L 245,230 
+             L 190,265 
+             L 165,155 
+             L 145,395 
+             Z"
+          fill="url(#goLeftPillar)"
+          filter="url(#mDropShadow)"/>
+
+    <!-- Highlight bevel along left stem -->
+    <path d="M 98,220 L 98,390" 
+          stroke="#E0F7FA" 
+          stroke-width="5" 
+          stroke-linecap="round" 
+          opacity="0.7"/>
+
+    <!-- LAYER 3: The Center 'V' of the 'M' (Vim Core) -->
+    <!-- Slopes down from the left peak to center-bottom vertex, then climbs to right peak -->
+    <path d="M 165,85 
+             L 256,380 
+             C 260,395 275,395 280,380 
+             L 360,115 
+             L 305,100 
+             L 256,290 
+             L 195,95 
+             Z"
+          fill="url(#goCenterV)"
+          filter="url(#mDropShadow)"/>
+
+    <!-- LAYER 4: Right Leg & Peak of 'M' (Interlocking with VS Code Ribbon Fold) -->
+    <path d="M 330,95 
+             C 345,75 375,75 390,95 
+             L 440,165 
+             L 390,395 
+             L 335,395 
+             L 365,225 
+             L 305,100 
+             Z"
+          fill="url(#goRightWing)"
+          filter="url(#mDropShadow)"/>
+
+    <!-- LAYER 5: The VS Code Front Ribbon Wrap across the right leg of M -->
+    <path d="M 275,280 
+             L 365,370 
+             C 385,390 425,390 445,365 
+             L 460,290 
+             L 405,290 
+             L 395,335 
+             L 330,265 
+             Z"
+          fill="url(#goLeftPillar)"
+          filter="url(#mDropShadow)"/>
+
+    <!-- Geek Terminal Accent: The glowing '>_' in the center V of M -->
+    <polygon points="256,335 272,305 256,290 240,305" 
+             fill="#E0F7FA" 
+             filter="url(#glowAccent)" 
+             opacity="0.95"/>
+  </g>
+</svg>

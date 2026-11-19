@@ -1,0 +1,58 @@
+-- ===================================================================
+-- Minimal (vsc) - Main Entry Point
+-- Pure VS Code & Normal PC Feel (Zero Vim Modal Keys, Zero Errors)
+-- Made by indiedev
+-- ===================================================================
+
+-- 1. Load modeless options (cursor, mouse, selection, clipboard)
+require("options")
+
+-- 2. Load theme manager and restore saved theme (defaults to darkmagic)
+local theme_mgr = require("theme")
+local saved_theme = theme_mgr.get_current_theme()
+pcall(vim.cmd, "colorscheme " .. saved_theme)
+
+-- 3. Bootstrap lazy.nvim in isolated data directory (~/.local/share/vsc)
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+      { out, "WarningMsg" },
+      { "\nPress any key to exit..." },
+    }, true, {})
+    vim.fn.getchar()
+    os.exit(1)
+  end
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- 4. Setup lazy.nvim with our curated lightweight suite
+require("lazy").setup({
+  spec = require("plugins"),
+  defaults = {
+    lazy = false,
+    version = false,
+  },
+  install = { colorscheme = { "darkmagic" } },
+  checker = { enabled = false },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        "gzip",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "zipPlugin",
+      },
+    },
+  },
+})
+
+-- 5. Load pure VS Code keymaps & modeless typing handlers
+require("keymaps")
+
+-- 6. Load persistent recent workspaces & files tracker
+require("recents")

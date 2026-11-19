@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ===================================================================
+# Minimal Code Editor - Main Launcher
+# ===================================================================
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$DIR/msc" ]; then
+    exec "$DIR/msc" "$@"
+fi
+
+if command -v msc >/dev/null 2>&1; then
+    exec msc "$@"
+fi
+
+echo "Error: Minimal launcher 'msc' could not be found." >&2
+exit 1
