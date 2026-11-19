@@ -1,19 +1,49 @@
 # Minimal Code Editor
 
-Minimal is a lightweight code editor combining the performance of Neovim with the familiar keybindings of VS Code. It runs inside an optimized Kitty terminal profile with an isolated configuration.
-
-## Key Features
-
-- **Sub-25ms Startup:** Minimal memory footprint with zero Electron bloat.
-- **Familiar Controls:** Modeless typing with standard shortcuts (<kbd>Ctrl+S</kbd>, <kbd>Ctrl+P</kbd>, <kbd>Ctrl+F</kbd>, <kbd>Ctrl+Q</kbd>).
-- **Non-Destructive:** Runs under an isolated `NVIM_APPNAME="vsc"` environment, preserving any existing Neovim or Kitty configurations.
-- **Cross-Platform:** Installs across Linux distributions and macOS.
+Minimal is a lightning-fast, distraction-free code editor combining the raw speed of Neovim with the familiar keybindings of VS Code. It runs inside an optimized Kitty terminal profile with a completely isolated configuration.
 
 ---
 
-## Quick Installation
+## ⚡ Key Features
 
-Run the one-line installer in your terminal:
+- **Sub-25ms Startup:** Minimal memory footprint (~30MB) with zero Electron bloat.
+- **Familiar Muscle Memory:** Modeless typing with standard shortcuts (<kbd>Ctrl+S</kbd>, <kbd>Ctrl+P</kbd>, <kbd>Ctrl+F</kbd>, <kbd>Ctrl+Q</kbd>).
+- **100% Non-Destructive:** Runs under an isolated `NVIM_APPNAME="vsc"` environment. It will **never** overwrite or conflict with your existing Neovim or Kitty configurations.
+- **Cross-Platform:** Full native support across Linux and macOS.
+
+---
+
+## 📦 Prerequisites
+
+Minimal requires **Neovim** (>= 0.9.0) and **Kitty** terminal.
+
+### macOS (via Homebrew)
+```bash
+brew install neovim kitty
+```
+
+### Linux
+
+- **Arch Linux / Manjaro / EndeavourOS:**
+  ```bash
+  sudo pacman -S neovim kitty git
+  ```
+- **Ubuntu / Debian / Linux Mint:**
+  ```bash
+  sudo apt install neovim kitty git
+  ```
+- **Fedora:**
+  ```bash
+  sudo dnf install neovim kitty git
+  ```
+
+*(Recommended)* Install a Nerd Font such as **JetBrainsMono Nerd Font** for icons.
+
+---
+
+## 🚀 Quick Installation
+
+Run the universal one-line installer in your terminal:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.sh | bash
@@ -21,7 +51,7 @@ curl -fsSL https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-e
 
 ### Manual Installation
 
-Clone the repository and run the setup script:
+Alternatively, clone the repository and run the setup script:
 
 ```bash
 git clone https://github.com/utkarshIsAProgrammer/minimal-code-editor.git
@@ -32,25 +62,40 @@ chmod +x install.sh
 
 ---
 
-## Shortcuts Reference
+## 💻 How to Use
 
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Esc</kbd> | Normal Mode | Switch to command/navigation mode. |
-| <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save | Saves the active buffer. |
-| <kbd>Ctrl</kbd> + <kbd>P</kbd> | Find File | Search files in workspace. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Command Palette | Fuzzy find editor actions. |
-| <kbd>Ctrl</kbd> + <kbd>Q</kbd> | Smart Quit | Prompts to save before quitting. |
-| <kbd>Ctrl</kbd> + <kbd>N</kbd> | New File | Opens an empty buffer. |
-| <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Tab | Closes current buffer tab. |
+Once installed, launch Minimal from anywhere in your terminal:
 
-For the full shortcut list, see [docs/shortcuts.md](docs/shortcuts.md).
+```bash
+minimal             # Launch empty editor
+minimal .           # Open current directory workspace
+minimal main.py     # Open a specific file
+```
+
+On Linux, you can also launch **Minimal** directly from your application launcher (Rofi, Wofi, GNOME, KDE, or Hyprland).
 
 ---
 
-## Uninstallation
+## ⌨️ Shortcuts Reference
 
-To cleanly remove Minimal and its configurations:
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| <kbd>Esc</kbd> | Normal Mode | Switch to command / navigation mode. |
+| <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save File | Saves the active buffer. |
+| <kbd>Ctrl</kbd> + <kbd>P</kbd> | Find File | Fuzzy search files in workspace. |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Command Palette | Search all editor actions. |
+| <kbd>Ctrl</kbd> + <kbd>Q</kbd> | Smart Quit | Prompts to save before quitting. |
+| <kbd>Ctrl</kbd> + <kbd>N</kbd> | New File | Opens an empty buffer tab. |
+| <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Tab | Closes current buffer tab. |
+| <kbd>Ctrl</kbd> + <kbd>Tab</kbd> | Next Tab | Switch to next open buffer. |
+
+For the complete shortcuts list, see [docs/shortcuts.md](docs/shortcuts.md).
+
+---
+
+## 🗑️ Uninstallation
+
+Minimal is completely isolated. If you ever wish to remove it cleanly:
 
 ```bash
 cd minimal-code-editor && ./uninstall.sh
@@ -58,6 +103,6 @@ cd minimal-code-editor && ./uninstall.sh
 
 ---
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License.
+This project is open-source under the MIT License.
