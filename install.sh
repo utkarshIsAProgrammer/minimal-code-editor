@@ -143,10 +143,17 @@ chmod +x "$BIN_DIR/minimal" "$BIN_DIR/msc"
 echo -e "  ${GREEN}✔${RESET} Installed commands: ${CYAN}minimal${RESET} and ${CYAN}msc${RESET} to ${CYAN}$BIN_DIR/${RESET}"
 
 if [ "$PLATFORM" = "Linux" ]; then
-    # Icons
+    # Standard Icons & Hicolor spec (prevents older cached icons from overriding)
+    mkdir -p "$XDG_DATA_HOME/icons/hicolor/scalable/apps"
+    mkdir -p "$XDG_DATA_HOME/icons/hicolor/512x512/apps"
+    mkdir -p "$XDG_DATA_HOME/icons/hicolor/256x256/apps"
+
     cp -f "$SRC_DIR/assets/minimal.png" "$XDG_DATA_HOME/icons/minimal.png"
     cp -f "$SRC_DIR/assets/minimal.svg" "$XDG_DATA_HOME/icons/minimal.svg"
-    echo -e "  ${GREEN}✔${RESET} Desktop icons installed"
+    cp -f "$SRC_DIR/assets/minimal.svg" "$XDG_DATA_HOME/icons/hicolor/scalable/apps/minimal.svg"
+    cp -f "$SRC_DIR/assets/minimal.png" "$XDG_DATA_HOME/icons/hicolor/512x512/apps/minimal.png"
+    cp -f "$SRC_DIR/assets/minimal.png" "$XDG_DATA_HOME/icons/hicolor/256x256/apps/minimal.png"
+    echo -e "  ${GREEN}✔${RESET} Desktop icons installed to standard and hicolor themes"
 
     # Desktop Launcher
     cp -f "$SRC_DIR/desktop/minimal.desktop" "$XDG_DATA_HOME/applications/minimal.desktop"
@@ -156,6 +163,7 @@ if [ "$PLATFORM" = "Linux" ]; then
         update-desktop-database "$XDG_DATA_HOME/applications" >/dev/null 2>&1 || true
     fi
     if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -f -t "$XDG_DATA_HOME/icons/hicolor" >/dev/null 2>&1 || true
         gtk-update-icon-cache -f -t "$XDG_DATA_HOME/icons" >/dev/null 2>&1 || true
     fi
 fi
