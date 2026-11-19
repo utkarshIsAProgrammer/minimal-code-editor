@@ -26,6 +26,11 @@ Minimal requires **Neovim** (>= 0.9.0) and **Kitty** terminal.
 brew install neovim kitty
 ```
 
+### Windows
+```powershell
+winget install Neovim.Neovim Git.Git
+```
+
 ### Linux
 
 - **Arch Linux / Manjaro / EndeavourOS:**
@@ -47,10 +52,18 @@ brew install neovim kitty
 
 ## 🚀 Quick Installation
 
-Run the universal one-line installer in your terminal:
+### Linux & macOS
+Run the universal installer in your terminal:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.sh | bash
+```
+
+### Windows (Native PowerShell)
+Run the native Windows installer in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.ps1 | iex
 ```
 
 ### Manual Installation
