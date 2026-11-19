@@ -20,12 +20,11 @@ RESET="\033[0m"
 
 echo -e "${CYAN}"
 cat << 'EOF'
-     __  __ _       _                 _ 
-    |  \/  (_)_ __ (_)___ _ __   __ _| |
-    | |\/| | | '_ \| / __| '_ \ / _` | |
-    | |  | | | | | | \__ \ |_) | (_| | |
-    |_|  |_|_|_| |_|_|___/ .__/ \__,_|_|
-                         |_|            
+  __  __ _       _                 _ 
+ |  \/  (_)_ __ (_)_ __ ___   __ _| |
+ | |\/| | | '_ \| | '_ ` _ \ / _` | |
+ | |  | | | | | | | | | | | | (_| | |
+ |_|  |_|_|_| |_|_|_| |_| |_|\__,_|_|
 EOF
 echo -e "${RESET}${BOLD}The Lightning-Fast Minimalist Code Editor${RESET}"
 echo -e "${BLUE}https://github.com/utkarshIsAProgrammer/minimal-code-editor${RESET}\n"

@@ -9,12 +9,11 @@ $RepoUrl = "https://github.com/utkarshIsAProgrammer/minimal-code-editor.git"
 $Branch  = "main"
 
 Write-Host ""
-Write-Host "     __  __ _       _                 _ " -ForegroundColor Cyan
-Write-Host "    |  \/  (_)_ __ (_)___ _ __   __ _| |" -ForegroundColor Cyan
-Write-Host "    | |\/| | | '_ \| / __| '_ \ / _` | |" -ForegroundColor Cyan
-Write-Host "    | |  | | | | | | \__ \ |_) | (_| | |" -ForegroundColor Cyan
-Write-Host "    |_|  |_|_|_| |_|_|___/ .__/ \__,_|_|" -ForegroundColor Cyan
-Write-Host "                         |_|            " -ForegroundColor Cyan
+Write-Host '  __  __ _       _                 _ ' -ForegroundColor Cyan
+Write-Host ' |  \/  (_)_ __ (_)_ __ ___   __ _| |' -ForegroundColor Cyan
+Write-Host ' | |\/| | | ''_ \| | ''_ ` _ \ / _` | |' -ForegroundColor Cyan
+Write-Host ' | |  | | | | | | | | | | | | (_| | |' -ForegroundColor Cyan
+Write-Host ' |_|  |_|_|_| |_|_|_| |_| |_|\__,_|_|' -ForegroundColor Cyan
 Write-Host "  The Lightning-Fast Minimalist Code Editor" -ForegroundColor White
 Write-Host "  Native Windows Setup" -ForegroundColor DarkCyan
 Write-Host ""
