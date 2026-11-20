@@ -11,7 +11,7 @@ $Branch  = "main"
 Write-Host ""
 Write-Host "  __  __ _       _                 _ " -ForegroundColor Cyan
 Write-Host " |  \/  (_)_ __ (_)_ __ ___   __ _| |" -ForegroundColor Cyan
-Write-Host " | |\/| | | '_ \| | '_ `` _ \ / _` | |" -ForegroundColor Cyan
+Write-Host " | |\/| | | '_ \| | '_ `` _ \ / _`` | |" -ForegroundColor Cyan
 Write-Host " | |  | | | | | | | | | | | | (_| | |" -ForegroundColor Cyan
 Write-Host " |_|  |_|_|_| |_|_|_| |_| |_|\__,_|_|" -ForegroundColor Cyan
 Write-Host "  The Lightning-Fast Minimalist Code Editor" -ForegroundColor White
@@ -181,16 +181,11 @@ New-Item -ItemType Directory -Force -Path $NvimConfigDir | Out-Null
 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 New-Item -ItemType Directory -Force -Path $AssetsDir | Out-Null
 
-# Copy Neovim Config
-Copy-Item -Path "$SrcDir\config\vsc\*" -Destination $NvimConfigDir -Recurse -Force
-Write-Host "  ✔ Installed Neovim config to: $NvimConfigDir" -ForegroundColor Green
-
-# If no standard nvim config exists, mirror to LOCALAPPDATA\nvim for convenience
-$StdNvimConfig = Join-Path $env:LOCALAPPDATA "nvim"
-if (-not (Test-Path $StdNvimConfig)) {
-    Copy-Item -Path "$SrcDir\config\vsc\*" -Destination $StdNvimConfig -Recurse -Force
-    Write-Host "  ✔ Mirrored to standard nvim path: $StdNvimConfig" -ForegroundColor DarkCyan
+# Copy Neovim Config (Isolated to LOCALAPPDATA\vsc)
+Get-ChildItem -Path "$SrcDir\config\vsc" | ForEach-Object {
+    Copy-Item -Path $_.FullName -Destination $NvimConfigDir -Recurse -Force
 }
+Write-Host "  ✔ Installed Neovim config to: $NvimConfigDir" -ForegroundColor Green
 
 # Copy Assets (icon)
 if (Test-Path "$SrcDir\assets\minimal.ico") {
@@ -199,11 +194,24 @@ if (Test-Path "$SrcDir\assets\minimal.ico") {
 }
 
 # Copy Windows Launchers (minimal.cmd and msc.cmd)
-Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\minimal.cmd" -Force
-Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\msc.cmd" -Force
+if (Test-Path "$SrcDir\bin\minimal.cmd") {
+    Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\minimal.cmd" -Force
+}
+if (Test-Path "$SrcDir\bin\msc.cmd") {
+    Copy-Item -Path "$SrcDir\bin\msc.cmd" -Destination "$BinDir\msc.cmd" -Force
+} elseif (Test-Path "$SrcDir\bin\minimal.cmd") {
+    Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\msc.cmd" -Force
+}
+
 if (Test-Path $WinAppsDir) {
-    Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$WinAppsDir\minimal.cmd" -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$WinAppsDir\msc.cmd" -Force -ErrorAction SilentlyContinue
+    if (Test-Path "$SrcDir\bin\minimal.cmd") {
+        Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$WinAppsDir\minimal.cmd" -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path "$SrcDir\bin\msc.cmd") {
+        Copy-Item -Path "$SrcDir\bin\msc.cmd" -Destination "$WinAppsDir\msc.cmd" -Force -ErrorAction SilentlyContinue
+    } elseif (Test-Path "$SrcDir\bin\minimal.cmd") {
+        Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$WinAppsDir\msc.cmd" -Force -ErrorAction SilentlyContinue
+    }
 }
 Write-Host "  ✔ Installed commands: minimal and msc" -ForegroundColor Green
 
@@ -266,7 +274,7 @@ try {
 }
 
 # -------------------------------------------------------------------
-# 6. Ensure PATH includes ~/.local/bin
+# 6. Ensure PATH & PowerShell Profile integration
 # -------------------------------------------------------------------
 $UserPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
 if ($UserPath -notlike "*$BinDir*") {
@@ -274,6 +282,23 @@ if ($UserPath -notlike "*$BinDir*") {
     $env:Path = "$env:Path;$BinDir"
     Write-Host "  ✔ Added $BinDir to User PATH" -ForegroundColor Green
 }
+
+# Immediate session commands (callable right now without restarting PowerShell)
+function global:minimal { & "$BinDir\minimal.cmd" @args }
+function global:msc { & "$BinDir\minimal.cmd" @args }
+
+# PowerShell Profile integration
+try {
+    $ProfilePath = $PROFILE
+    $ProfileDir = Split-Path -Parent $ProfilePath -ErrorAction SilentlyContinue
+    if ($ProfileDir -and (-not (Test-Path $ProfileDir))) {
+        New-Item -ItemType Directory -Force -Path $ProfileDir | Out-Null
+    }
+    $aliasSnippet = "`n# Minimal Code Editor`nfunction minimal { & `"$BinDir\minimal.cmd`" @args }`nfunction msc { & `"$BinDir\minimal.cmd`" @args }`n"
+    if (-not (Test-Path $ProfilePath) -or ((Get-Content $ProfilePath -Raw -ErrorAction SilentlyContinue) -notlike "*minimal.cmd*")) {
+        Add-Content -Path $ProfilePath -Value $aliasSnippet -Force -ErrorAction SilentlyContinue
+    }
+} catch {}
 
 # -------------------------------------------------------------------
 # 7. Clean up temp
