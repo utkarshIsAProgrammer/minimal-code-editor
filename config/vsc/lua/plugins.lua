@@ -139,15 +139,102 @@ return {
 ]]
 
           local items = {
-            { icon = " ", key = "f", desc = "Find File (Ctrl+P)", action = ":lua Snacks.picker.files()" },
-            { icon = " ", key = "n", desc = "New File (Ctrl+N)", action = ":ene | startinsert" },
-            { icon = "󰉎 ", key = "o", desc = "Open Folder (Ctrl+O)", action = ":lua OpenFolderPicker()" },
-            { icon = " ", key = "g", desc = "Find in Files (Ctrl+Shift+F)", action = ":lua Snacks.picker.grep()" },
-            { icon = " ", key = "r", desc = "Recent Projects & Files", action = ":lua ShowRecentPicker()" },
-            { icon = " ", key = "c", desc = "Command Palette (Ctrl+Shift+P)", action = ":lua Snacks.picker.commands()" },
-            { icon = " ", key = "p", desc = "Color Theme (Ctrl+K Ctrl+T)", action = ":lua SelectThemePicker()" },
-            { icon = " ", key = "t", desc = "Terminal (Ctrl+`)", action = ":lua Snacks.terminal()" },
-            { icon = " ", key = "q", desc = "Quit Minimal (:q / Ctrl+Q)", action = ":lua SmartQuit()" },
+            {
+              icon = " ",
+              key = "f",
+              desc = "Find File (Ctrl+P)",
+              action = function()
+                local ok, snacks = pcall(require, "snacks")
+                if ok and snacks.picker then snacks.picker.files() end
+              end,
+            },
+            {
+              icon = " ",
+              key = "n",
+              desc = "New File (Ctrl+N)",
+              action = function()
+                vim.cmd("enew")
+                vim.cmd("startinsert")
+              end,
+            },
+            {
+              icon = "󰉎 ",
+              key = "o",
+              desc = "Open Folder (Ctrl+O)",
+              action = function()
+                if _G.OpenFolderPicker then
+                  _G.OpenFolderPicker()
+                else
+                  pcall(require, "keymaps")
+                  if _G.OpenFolderPicker then _G.OpenFolderPicker() end
+                end
+              end,
+            },
+            {
+              icon = " ",
+              key = "g",
+              desc = "Find in Files (Ctrl+Shift+F)",
+              action = function()
+                local ok, snacks = pcall(require, "snacks")
+                if ok and snacks.picker then snacks.picker.grep() end
+              end,
+            },
+            {
+              icon = " ",
+              key = "r",
+              desc = "Recent Projects & Files",
+              action = function()
+                if _G.ShowRecentPicker then
+                  _G.ShowRecentPicker()
+                else
+                  pcall(require, "recents")
+                  if _G.ShowRecentPicker then _G.ShowRecentPicker() end
+                end
+              end,
+            },
+            {
+              icon = " ",
+              key = "c",
+              desc = "Command Palette (Ctrl+Shift+P)",
+              action = function()
+                local ok, snacks = pcall(require, "snacks")
+                if ok and snacks.picker then snacks.picker.commands() end
+              end,
+            },
+            {
+              icon = " ",
+              key = "p",
+              desc = "Color Theme (Ctrl+K Ctrl+T)",
+              action = function()
+                if _G.SelectThemePicker then
+                  _G.SelectThemePicker()
+                else
+                  pcall(require, "theme")
+                  if _G.SelectThemePicker then _G.SelectThemePicker() end
+                end
+              end,
+            },
+            {
+              icon = " ",
+              key = "t",
+              desc = "Terminal (Ctrl+`)",
+              action = function()
+                local ok, snacks = pcall(require, "snacks")
+                if ok and snacks.terminal then snacks.terminal() end
+              end,
+            },
+            {
+              icon = " ",
+              key = "q",
+              desc = "Quit Minimal (:q / Ctrl+Q)",
+              action = function()
+                if _G.SmartQuit then
+                  _G.SmartQuit()
+                else
+                  vim.cmd("qa")
+                end
+              end,
+            },
           }
 
           local box_w = 54
@@ -211,7 +298,7 @@ return {
         },
       },
       terminal = {
-        shell = "/bin/bash",
+        shell = vim.o.shell,
         win = {
           position = "bottom",
           height = 0.35,

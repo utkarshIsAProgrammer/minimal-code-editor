@@ -52,28 +52,75 @@ function Find-Neovim {
 }
 
 # -------------------------------------------------------------------
-# 1. Check Prerequisites
+# 1. Check Prerequisites & Auto-Install
 # -------------------------------------------------------------------
 Write-Host "🔍 Checking prerequisites..." -ForegroundColor White
 
+# 1.1 Ensure Neovim
 $nvimPath = Find-Neovim
 if (-not $nvimPath) {
-    Write-Host "⚠ Warning: 'nvim' (Neovim) was not found in PATH." -ForegroundColor Yellow
-    Write-Host "  Attempting to install Neovim via winget..." -ForegroundColor Cyan
+    Write-Host "  Installing Neovim..." -ForegroundColor Cyan
+    $installed = $false
+
+    # Try winget first
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-        winget install Neovim.Neovim --accept-source-agreements --accept-package-agreements
-        Refresh-EnvPath
-        $nvimPath = Find-Neovim
+        try {
+            winget install Neovim.Neovim --accept-source-agreements --accept-package-agreements --silent
+            Refresh-EnvPath
+            $nvimPath = Find-Neovim
+            if ($nvimPath) { $installed = $true }
+        } catch {}
     }
-    if ($nvimPath) {
-        $nvimVer = (& $nvimPath --version | Select-Object -First 1)
-        Write-Host "  ✔ Installed & located: $nvimVer" -ForegroundColor Green
-    } else {
-        Write-Host "  ⚠ Note: Please install Neovim (>=0.9.0) from https://neovim.io if not installed." -ForegroundColor Yellow
+
+    # Fallback to direct portable ZIP download from GitHub releases
+    if (-not $installed) {
+        try {
+            Write-Host "  Downloading portable Neovim from GitHub..." -ForegroundColor DarkCyan
+            $NvimZipUrl = "https://github.com/neovim/neovim/releases/latest/download/nvim-win64.zip"
+            $NvimInstallDir = Join-Path $env:LOCALAPPDATA "Programs\Neovim"
+            $NvimTempZip = Join-Path $env:TEMP "nvim-win64.zip"
+
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri $NvimZipUrl -OutFile $NvimTempZip -UseBasicParsing
+            Expand-Archive -Path $NvimTempZip -DestinationPath (Join-Path $env:TEMP "nvim-extract") -Force
+
+            $ExtractedNvim = Join-Path $env:TEMP "nvim-extract\nvim-win64"
+            New-Item -ItemType Directory -Force -Path $NvimInstallDir | Out-Null
+            Copy-Item -Path "$ExtractedNvim\*" -Destination $NvimInstallDir -Recurse -Force
+            Remove-Item -Recurse -Force (Join-Path $env:TEMP "nvim-extract") -ErrorAction SilentlyContinue
+            Remove-Item -Force $NvimTempZip -ErrorAction SilentlyContinue
+
+            $nvimBinDir = Join-Path $NvimInstallDir "bin"
+            $userPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
+            if ($userPath -notlike "*$nvimBinDir*") {
+                [Environment]::SetEnvironmentVariable("Path", "$userPath;$nvimBinDir", [EnvironmentVariableTarget]::User)
+            }
+            $env:Path = "$env:Path;$nvimBinDir"
+            $nvimPath = Join-Path $nvimBinDir "nvim.exe"
+            $installed = $true
+        } catch {
+            Write-Host "  ⚠ Notice: Could not auto-download Neovim. Please install from https://neovim.io" -ForegroundColor Yellow
+        }
     }
-} else {
+}
+
+if ($nvimPath) {
     $nvimVer = (& $nvimPath --version | Select-Object -First 1)
     Write-Host "  ✔ Found $nvimVer" -ForegroundColor Green
+}
+
+# 1.2 Check Git (for plugin management)
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Write-Host "  Installing Git..." -ForegroundColor Cyan
+        try {
+            winget install Git.Git --accept-source-agreements --accept-package-agreements --silent
+            Refresh-EnvPath
+        } catch {}
+    }
+}
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    Write-Host "  ✔ Found Git" -ForegroundColor Green
 }
 
 # -------------------------------------------------------------------
@@ -128,6 +175,7 @@ Write-Host "⚙️ Setting up configurations..." -ForegroundColor White
 $NvimConfigDir = Join-Path $env:LOCALAPPDATA "vsc"
 $BinDir        = Join-Path $env:USERPROFILE ".local\bin"
 $AssetsDir     = Join-Path $env:LOCALAPPDATA "minimal\assets"
+$WinAppsDir    = Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps"
 
 New-Item -ItemType Directory -Force -Path $NvimConfigDir | Out-Null
 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
@@ -137,24 +185,61 @@ New-Item -ItemType Directory -Force -Path $AssetsDir | Out-Null
 Copy-Item -Path "$SrcDir\config\vsc\*" -Destination $NvimConfigDir -Recurse -Force
 Write-Host "  ✔ Installed Neovim config to: $NvimConfigDir" -ForegroundColor Green
 
+# If no standard nvim config exists, mirror to LOCALAPPDATA\nvim for convenience
+$StdNvimConfig = Join-Path $env:LOCALAPPDATA "nvim"
+if (-not (Test-Path $StdNvimConfig)) {
+    Copy-Item -Path "$SrcDir\config\vsc\*" -Destination $StdNvimConfig -Recurse -Force
+    Write-Host "  ✔ Mirrored to standard nvim path: $StdNvimConfig" -ForegroundColor DarkCyan
+}
+
 # Copy Assets (icon)
 if (Test-Path "$SrcDir\assets\minimal.ico") {
     Copy-Item -Path "$SrcDir\assets\minimal.ico" -Destination $AssetsDir -Force
     Write-Host "  ✔ Installed application icon" -ForegroundColor Green
 }
 
-# Copy Windows Launcher
+# Copy Windows Launchers (minimal.cmd and msc.cmd)
 Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\minimal.cmd" -Force
-Write-Host "  ✔ Installed command: $BinDir\minimal.cmd" -ForegroundColor Green
+Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\msc.cmd" -Force
+if (Test-Path $WinAppsDir) {
+    Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$WinAppsDir\minimal.cmd" -Force -ErrorAction SilentlyContinue
+    Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$WinAppsDir\msc.cmd" -Force -ErrorAction SilentlyContinue
+}
+Write-Host "  ✔ Installed commands: minimal and msc" -ForegroundColor Green
 
 # -------------------------------------------------------------------
-# 4. Create Start Menu Shortcut
+# 4. Pre-bootstrap lazy.nvim Engine
+# -------------------------------------------------------------------
+$LazyDataDir = Join-Path $env:LOCALAPPDATA "vsc-data\lazy\lazy.nvim"
+if (-not (Test-Path $LazyDataDir)) {
+    try {
+        Write-Host "  Initializing lazy.nvim engine..." -ForegroundColor DarkCyan
+        $LazyZipUrl = "https://github.com/folke/lazy.nvim/archive/refs/heads/stable.zip"
+        $LazyTempZip = Join-Path $env:TEMP "lazy-stable.zip"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $LazyZipUrl -OutFile $LazyTempZip -UseBasicParsing
+        New-Item -ItemType Directory -Force -Path (Join-Path $env:LOCALAPPDATA "vsc-data\lazy") | Out-Null
+        Expand-Archive -Path $LazyTempZip -DestinationPath (Join-Path $env:LOCALAPPDATA "vsc-data\lazy") -Force
+        $UnzippedLazy = Join-Path $env:LOCALAPPDATA "vsc-data\lazy\lazy.nvim-stable"
+        if (Test-Path $UnzippedLazy) {
+            Rename-Item -Path $UnzippedLazy -NewName "lazy.nvim" -Force
+        }
+        Remove-Item -Force $LazyTempZip -ErrorAction SilentlyContinue
+        Write-Host "  ✔ Pre-bootstrapped lazy.nvim engine" -ForegroundColor Green
+    } catch {}
+}
+
+# -------------------------------------------------------------------
+# 5. Create Start Menu & Desktop Shortcuts
 # -------------------------------------------------------------------
 try {
     $WshShell = New-Object -ComObject WScript.Shell
+    $TargetExe = Join-Path $BinDir "minimal.cmd"
+
+    # Start Menu Shortcut
     $StartMenuPath = [System.IO.Path]::Combine($env:APPDATA, "Microsoft\Windows\Start Menu\Programs\Minimal.lnk")
     $Shortcut = $WshShell.CreateShortcut($StartMenuPath)
-    $Shortcut.TargetPath = "$BinDir\minimal.cmd"
+    $Shortcut.TargetPath = $TargetExe
     $Shortcut.WorkingDirectory = $env:USERPROFILE
     if (Test-Path "$AssetsDir\minimal.ico") {
         $Shortcut.IconLocation = "$AssetsDir\minimal.ico"
@@ -162,12 +247,26 @@ try {
     $Shortcut.Description = "Minimal Code Editor"
     $Shortcut.Save()
     Write-Host "  ✔ Created Start Menu shortcut" -ForegroundColor Green
+
+    # Desktop Shortcut
+    $DesktopDir = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+    if ($DesktopDir -and (Test-Path $DesktopDir)) {
+        $DesktopShortcut = $WshShell.CreateShortcut((Join-Path $DesktopDir "Minimal.lnk"))
+        $DesktopShortcut.TargetPath = $TargetExe
+        $DesktopShortcut.WorkingDirectory = $env:USERPROFILE
+        if (Test-Path "$AssetsDir\minimal.ico") {
+            $DesktopShortcut.IconLocation = "$AssetsDir\minimal.ico"
+        }
+        $DesktopShortcut.Description = "Minimal Code Editor"
+        $DesktopShortcut.Save()
+        Write-Host "  ✔ Created Desktop shortcut" -ForegroundColor Green
+    }
 } catch {
-    Write-Host "  ⚠ Notice: Could not create Start Menu shortcut." -ForegroundColor DarkGray
+    Write-Host "  ⚠ Notice: Could not create desktop shortcut." -ForegroundColor DarkGray
 }
 
 # -------------------------------------------------------------------
-# 5. Ensure PATH includes ~/.local/bin
+# 6. Ensure PATH includes ~/.local/bin
 # -------------------------------------------------------------------
 $UserPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
 if ($UserPath -notlike "*$BinDir*") {
@@ -177,19 +276,22 @@ if ($UserPath -notlike "*$BinDir*") {
 }
 
 # -------------------------------------------------------------------
-# 6. Clean up temp
+# 7. Clean up temp
 # -------------------------------------------------------------------
 if ($TempDir -and (Test-Path $TempDir)) {
     Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
 }
 
 # -------------------------------------------------------------------
-# 7. Complete!
+# 8. Complete!
 # -------------------------------------------------------------------
 Write-Host ""
 Write-Host "✨ Minimal installed successfully on Windows! ✨" -ForegroundColor Green
 Write-Host ""
-Write-Host "You can launch it anytime by:" -ForegroundColor White
-Write-Host "  1. Typing 'minimal' or 'minimal .' in PowerShell or CMD" -ForegroundColor Cyan
-Write-Host "  2. Searching for 'Minimal' in your Windows Start Menu" -ForegroundColor Cyan
+Write-Host "Launch options:" -ForegroundColor White
+Write-Host "  1. Type 'minimal' or 'msc' in any PowerShell / CMD terminal" -ForegroundColor Cyan
+Write-Host "  2. Search for 'Minimal' in your Windows Start Menu" -ForegroundColor Cyan
+Write-Host "  3. Double-click the 'Minimal' shortcut on your Desktop" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "ℹ Note: If you have older terminal windows currently open, please open a new window to refresh your PATH." -ForegroundColor DarkCyan
 Write-Host ""

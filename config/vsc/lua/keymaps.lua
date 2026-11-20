@@ -19,22 +19,32 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
   callback = function(args)
     if _G.skip_insert_autocmd then return end
     local buf = args.buf
-    if vim.api.nvim_buf_is_valid(buf)
-      and vim.bo[buf].buftype == ""
-      and vim.bo[buf].modifiable
-      and vim.bo[buf].filetype ~= "snacks_dashboard"
-      and vim.bo[buf].filetype ~= "snacks_picker_input"
-    then
-      vim.schedule(function()
-        if vim.api.nvim_buf_is_valid(buf)
-          and vim.bo[buf].buftype == ""
-          and vim.bo[buf].modifiable
-          and vim.bo[buf].filetype ~= "snacks_dashboard"
-        then
-          vim.cmd("startinsert")
-        end
-      end)
+    if not (vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == "" and vim.bo[buf].modifiable) then
+      return
     end
+    local ft = vim.bo[buf].filetype
+    if ft == "snacks_dashboard" or ft:find("dashboard") or ft:find("picker") or ft:find("snacks") then
+      vim.cmd("stopinsert")
+      return
+    end
+    -- If Neovim started with no arguments and this buffer is empty/unnamed, do not force insert mode (homescreen displays)
+    local name = vim.api.nvim_buf_get_name(buf)
+    if vim.fn.argc() == 0 and (name == "" or name == nil) and vim.api.nvim_buf_line_count(buf) <= 1 then
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, 1, false)
+      if #lines == 0 or lines[1] == "" then
+        return
+      end
+    end
+    vim.schedule(function()
+      if vim.api.nvim_buf_is_valid(buf)
+        and vim.bo[buf].buftype == ""
+        and vim.bo[buf].modifiable
+        and vim.bo[buf].filetype ~= "snacks_dashboard"
+        and not vim.bo[buf].filetype:find("picker")
+      then
+        vim.cmd("startinsert")
+      end
+    end)
   end,
   desc = "Maintain typing mode in editable files",
 })
@@ -148,8 +158,10 @@ local function handle_escape()
   local bt = vim.bo[cur_buf].buftype
   local win_cfg = vim.api.nvim_win_get_config(cur_win)
 
-  -- On dashboard: keep dashboard intact
-  if ft == "snacks_dashboard" then
+  -- On dashboard: ensure Normal mode and keep dashboard intact
+  if ft == "snacks_dashboard" or ft:find("dashboard") then
+    vim.cmd("stopinsert")
+    vim.cmd("nohlsearch")
     return
   end
 
@@ -545,26 +557,41 @@ map({ "n", "i", "s", "x" }, "<C-S-H>", _G.GoToHomescreen, { desc = "Go to Homesc
 local function setup_dashboard_buffer(buf)
   if not vim.api.nvim_buf_is_valid(buf) then return end
 
-  -- 1. Hide writing beam cursor completely
+  -- 1. Always force clean Normal mode on homescreen
+  vim.cmd("stopinsert")
+
+  -- 2. Hide writing beam cursor completely on homescreen
   io.write("\027[?25l")
   io.flush()
   pcall(function() vim.opt_local.guicursor = "n:block-blinkoff" end)
 
-  -- 2. Direct dashboard action key bindings
+  -- 3. Direct dashboard action key bindings (work in both Normal & Insert mode)
   local dash_actions = {
-    ["f"] = function() Snacks.picker.files() end,
+    ["f"] = function()
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.picker then snacks.picker.files() end
+    end,
     ["n"] = function()
       vim.cmd("enew")
       vim.cmd("startinsert")
     end,
     ["d"] = function() _G.CreateNewDirectory() end,
     ["o"] = function() _G.OpenFolderPicker() end,
-    ["g"] = function() Snacks.picker.grep() end,
+    ["g"] = function()
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.picker then snacks.picker.grep() end
+    end,
     ["r"] = function() _G.ShowRecentPicker() end,
-    ["c"] = function() Snacks.picker.commands() end,
+    ["c"] = function()
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.picker then snacks.picker.commands() end
+    end,
     ["p"] = function() _G.SelectThemePicker() end,
     ["k"] = function() _G.EditKeybindings() end,
-    ["t"] = function() Snacks.terminal() end,
+    ["t"] = function()
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.terminal then snacks.terminal() end
+    end,
     ["q"] = function() _G.SmartQuit() end,
     ["i"] = function()
       vim.cmd("enew")
@@ -577,11 +604,25 @@ local function setup_dashboard_buffer(buf)
   }
 
   for key, action in pairs(dash_actions) do
-    vim.keymap.set("n", key, action, { buffer = buf, nowait = true, silent = true })
-    vim.keymap.set("n", key:upper(), action, { buffer = buf, nowait = true, silent = true })
+    vim.keymap.set({ "n", "i" }, key, action, { buffer = buf, nowait = true, silent = true })
+    vim.keymap.set({ "n", "i" }, key:upper(), action, { buffer = buf, nowait = true, silent = true })
   end
 
-  -- 3. Disable all text selection and copying on homescreen
+  -- 4. Enter key runs the selected item under cursor
+  vim.keymap.set({ "n", "i" }, "<CR>", function()
+    local ok_snacks, snacks = pcall(require, "snacks")
+    if ok_snacks and snacks.dashboard then
+      local d = snacks.dashboard.get and snacks.dashboard.get()
+      if d and d.find then
+        local item = d:find(vim.api.nvim_win_get_cursor(0))
+        if item and item.action then
+          return d:action(item.action)
+        end
+      end
+    end
+  end, { buffer = buf, nowait = true, silent = true })
+
+  -- 5. Disable text selection/copying on homescreen
   for _, mode in ipairs({ "n", "x", "s", "v" }) do
     vim.keymap.set(mode, "v", "<Nop>", { buffer = buf, silent = true })
     vim.keymap.set(mode, "V", "<Nop>", { buffer = buf, silent = true })
@@ -590,30 +631,48 @@ local function setup_dashboard_buffer(buf)
     vim.keymap.set(mode, "<C-x>", "<Nop>", { buffer = buf, silent = true })
   end
 
-  -- 4. Disable horizontal cursor wandering outside the box
-  vim.keymap.set("n", "<Left>", "<Nop>", { buffer = buf, silent = true })
-  vim.keymap.set("n", "<Right>", "<Nop>", { buffer = buf, silent = true })
-  vim.keymap.set("n", "h", "<Nop>", { buffer = buf, silent = true })
-  vim.keymap.set("n", "l", "<Nop>", { buffer = buf, silent = true })
+  -- 6. Disable horizontal cursor wandering outside the box
+  vim.keymap.set({ "n", "i" }, "<Left>", "<Nop>", { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "i" }, "<Right>", "<Nop>", { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "i" }, "h", "<Nop>", { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "i" }, "l", "<Nop>", { buffer = buf, silent = true })
 
-  -- 5. Safe no-ops for all unused keys (NEVER throw 'modifiable is off' errors!)
+  -- 7. Safe no-ops for all unused keys in normal mode
   for i = 32, 126 do
     local c = string.char(i)
-    if not dash_actions[c:lower()] and c ~= ":" then
+    if not dash_actions[c:lower()] and c ~= ":" and c ~= "j" and c ~= "k" then
       vim.keymap.set("n", c, "<Nop>", { buffer = buf, nowait = true, silent = true })
     end
   end
 
-  vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<cr>", { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set({ "n", "i" }, "<Esc>", function()
+    vim.cmd("stopinsert")
+    vim.cmd("nohlsearch")
+  end, { buffer = buf, nowait = true, silent = true })
 end
 
-vim.api.nvim_create_autocmd({ "FileType", "BufEnter" }, {
+vim.api.nvim_create_autocmd("FileType", {
   pattern = "snacks_dashboard",
   callback = function(ev)
     setup_dashboard_buffer(ev.buf)
   end,
-  desc = "Configure interactive homescreen controls",
+  desc = "Configure interactive homescreen controls on FileType",
 })
+
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+  callback = function(ev)
+    if vim.bo[ev.buf].filetype == "snacks_dashboard" then
+      setup_dashboard_buffer(ev.buf)
+    end
+  end,
+  desc = "Configure interactive homescreen controls on BufEnter",
+})
+
+-- Apply immediately if dashboard is already open
+local _init_buf = vim.api.nvim_get_current_buf()
+if vim.bo[_init_buf].filetype == "snacks_dashboard" then
+  setup_dashboard_buffer(_init_buf)
+end
 
 vim.api.nvim_create_autocmd({ "BufLeave", "VimLeavePre" }, {
   callback = function()
@@ -664,7 +723,8 @@ function _G.OpenFolderPicker(target_dir)
     if vim.fn.isdirectory(path) == 1 then
       vim.fn.chdir(path)
       vim.notify("Workspace opened: " .. path, vim.log.levels.INFO, { title = "Open Folder" })
-      Snacks.explorer({ cwd = path })
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.explorer then snacks.explorer({ cwd = path }) end
       return
     else
       vim.notify("Directory does not exist: " .. target_dir, vim.log.levels.WARN, { title = "Open Folder" })
@@ -672,66 +732,117 @@ function _G.OpenFolderPicker(target_dir)
     end
   end
 
-  Snacks.picker({
-    title = "Open Project / Folder",
-    finder = function(opts, ctx)
-      return require("snacks.picker.source.proc").proc(
-        ctx:opts({
-          cmd = "fd",
-          args = {
-            "--type", "d",
-            "--max-depth", "3",
-            "--color", "never",
-            "-E", ".*",
-            "-E", "node_modules",
-            "-E", "target",
-            "-E", "build",
-            "-E", "dist",
-            "-E", "vendor",
-            "-E", "__pycache__",
-            "-E", "snap",
-            "-E", "nvram",
-            "-E", "SilentSDDM",
-            "-E", "Games",
-            "-E", "Videos",
-            "-E", "Music",
-            ".",
-            vim.env.HOME,
-          },
-          transform = function(item)
-            item.file = item.text
-            item.dir = true
-          end,
-        }),
-        ctx
-      )
-    end,
-    format = "file",
-    confirm = function(picker, item)
-      picker:close()
-      local dir = nil
-      if item and (item.file or item.text) then
-        dir = item.file or item.text
-      else
-        local input = picker.input:get()
-        if input and input ~= "" then
-          dir = vim.fn.expand(input)
+  local ok_snacks, snacks = pcall(require, "snacks")
+  if not ok_snacks or not snacks.picker then
+    vim.notify("Snacks picker not available", vim.log.levels.ERROR)
+    return
+  end
+
+  local has_fd = vim.fn.executable("fd") == 1
+  local home = vim.env.HOME or vim.env.USERPROFILE or "."
+
+  if has_fd then
+    snacks.picker({
+      title = "Open Project / Folder",
+      finder = function(opts, ctx)
+        return require("snacks.picker.source.proc").proc(
+          ctx:opts({
+            cmd = "fd",
+            args = {
+              "--type", "d",
+              "--max-depth", "3",
+              "--color", "never",
+              "-E", ".*",
+              "-E", "node_modules",
+              "-E", "target",
+              "-E", "build",
+              "-E", "dist",
+              "-E", "vendor",
+              "-E", "__pycache__",
+              ".",
+              home,
+            },
+            transform = function(item)
+              item.file = item.text
+              item.dir = true
+            end,
+          }),
+          ctx
+        )
+      end,
+      format = "file",
+      confirm = function(picker, item)
+        picker:close()
+        local dir = item and (item.file or item.text)
+        if not dir or dir == "" then return end
+        dir = vim.fn.fnamemodify(dir, ":p")
+        if vim.fn.isdirectory(dir) == 1 then
+          vim.fn.chdir(dir)
+          if _G.AddRecentFolder then _G.AddRecentFolder(dir) end
+          vim.notify("Workspace opened: " .. dir, vim.log.levels.INFO, { title = "Open Folder" })
+          vim.schedule(function() snacks.explorer({ cwd = dir }) end)
+        else
+          vim.notify("Directory does not exist: " .. dir, vim.log.levels.WARN, { title = "Open Folder" })
+        end
+      end,
+    })
+  else
+    -- Pure Lua fallback for vanilla Windows, macOS, or systems without fd
+    local uv = vim.uv or vim.loop
+    local items = {}
+    local seen = {}
+
+    local function add_dir(d)
+      if not d or d == "" or seen[d] then return end
+      seen[d] = true
+      table.insert(items, { text = d, file = d, dir = true })
+    end
+
+    add_dir(vim.fn.getcwd())
+    if _G.RecentWorkspaces then
+      for _, w in ipairs(_G.RecentWorkspaces) do add_dir(w) end
+    end
+
+    local function scan(d, depth)
+      if depth > 2 then return end
+      local handle = uv.fs_scandir(d)
+      if not handle then return end
+      while true do
+        local name, type = uv.fs_scandir_next(handle)
+        if not name then break end
+        if type == "directory" and not name:match("^%.") and name ~= "node_modules" and name ~= "target" and name ~= "build" and name ~= "dist" then
+          local full = d .. "/" .. name
+          add_dir(full)
+          scan(full, depth + 1)
         end
       end
-      if not dir or dir == "" then return end
-      dir = vim.fn.fnamemodify(dir, ":p")
-      if vim.fn.isdirectory(dir) == 1 then
-        vim.fn.chdir(dir)
-        if _G.AddRecentFolder then _G.AddRecentFolder(dir) end
-        vim.notify("Workspace opened: " .. dir, vim.log.levels.INFO, { title = "Open Folder" })
-        vim.schedule(function()
-          Snacks.explorer({ cwd = dir })
-        end)
-      else
-        vim.notify("Directory does not exist: " .. dir, vim.log.levels.WARN, { title = "Open Folder" })
-      end
-    end,
-  })
+    end
+
+    scan(vim.fn.getcwd(), 1)
+    if home and home ~= "." and home ~= "" then
+      scan(home, 1)
+    end
+
+    snacks.picker({
+      title = "Open Project / Folder",
+      items = items,
+      format = "file",
+      confirm = function(picker, item)
+        picker:close()
+        local dir = item and (item.file or item.text)
+        if not dir or dir == "" then return end
+        dir = vim.fn.fnamemodify(dir, ":p")
+        if vim.fn.isdirectory(dir) == 1 then
+          vim.fn.chdir(dir)
+          if _G.AddRecentFolder then _G.AddRecentFolder(dir) end
+          vim.notify("Workspace opened: " .. dir, vim.log.levels.INFO, { title = "Open Folder" })
+          vim.schedule(function() snacks.explorer({ cwd = dir }) end)
+        else
+          vim.notify("Directory does not exist: " .. dir, vim.log.levels.WARN, { title = "Open Folder" })
+        end
+      end,
+    })
+  end
 end
 _G.OpenProject = _G.OpenFolderPicker
 
@@ -1421,7 +1532,12 @@ local function start_live_server()
   live_server_job = vim.fn.jobstart({ "python3", "-m", "http.server", "5500", "--directory", dir }, {
     on_exit = function() live_server_job = nil end,
   })
-  vim.fn.jobstart({ "xdg-open", "http://localhost:5500" }, { detach = true })
+  local open_cmd = vim.fn.has("mac") == 1 and "open" or (vim.fn.has("win32") == 1 and "cmd.exe" or "xdg-open")
+  if open_cmd == "cmd.exe" then
+    vim.fn.jobstart({ "cmd.exe", "/c", "start", "http://localhost:5500" }, { detach = true })
+  else
+    vim.fn.jobstart({ open_cmd, "http://localhost:5500" }, { detach = true })
+  end
   vim.notify("Live Server started at http://localhost:5500 (" .. dir .. ")", vim.log.levels.INFO, { title = "Live Server" })
 end
 
@@ -2053,3 +2169,39 @@ vim.api.nvim_create_user_command("Theme", function() _G.SelectThemePicker() end,
 vim.api.nvim_create_user_command("ColorTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
 vim.api.nvim_create_user_command("SelectTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
 vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between Dark Magic, Nerd Dark, and Cyber Aurora" })
+
+-- -------------------------------------------------------------------
+-- 24. Native macOS Command Key (Cmd / ⌘) Support
+-- -------------------------------------------------------------------
+-- Save: Cmd+S / Cmd+Shift+S
+map({ "n", "i", "x", "s" }, "<D-s>", function() _G.SmartSave(false) end, { desc = "Save (Cmd+S)" })
+map({ "n", "i", "x", "s" }, "<D-S-s>", function() _G.SmartSave(true) end, { desc = "Save As (Cmd+Shift+S)" })
+
+-- Quick Open: Cmd+P
+map({ "n", "i" }, "<D-p>", function() Snacks.picker.files() end, { desc = "Quick Open File (Cmd+P)" })
+
+-- Command Palette: Cmd+Shift+P
+map({ "n", "i" }, "<D-S-p>", function() Snacks.picker.commands() end, { desc = "Command Palette (Cmd+Shift+P)" })
+map({ "n", "i" }, "<D-P>", function() Snacks.picker.commands() end, { desc = "Command Palette (Cmd+Shift+P)" })
+
+-- Find: Cmd+F / Cmd+Shift+F
+map({ "n", "i", "x", "s" }, "<D-f>", function() Snacks.picker.lines() end, { desc = "Find in File (Cmd+F)" })
+map({ "n", "i" }, "<D-S-f>", function() Snacks.picker.grep() end, { desc = "Find in Files (Cmd+Shift+F)" })
+map({ "n", "i" }, "<D-F>", function() Snacks.picker.grep() end, { desc = "Find in Files (Cmd+Shift+F)" })
+
+-- New File: Cmd+N / Open Folder: Cmd+O
+map({ "n", "i" }, "<D-n>", "<cmd>enew<cr><cmd>startinsert<cr>", { desc = "New File (Cmd+N)" })
+map({ "n", "i" }, "<D-o>", function() _G.OpenFolderPicker() end, { desc = "Open Folder (Cmd+O)" })
+
+-- Undo / Redo: Cmd+Z / Cmd+Shift+Z
+map("n", "<D-z>", "u", { desc = "Undo (Cmd+Z)" })
+map("i", "<D-z>", "<C-o>u", { desc = "Undo (Cmd+Z)" })
+map({ "x", "s" }, "<D-z>", "<Esc>u<cmd>startinsert<cr>", { desc = "Undo (Cmd+Z)" })
+map({ "n", "i", "x", "s" }, "<D-S-z>", "<Esc><C-r><cmd>startinsert<cr>", { desc = "Redo (Cmd+Shift+Z)" })
+
+-- Toggle Sidebar: Cmd+B
+map({ "n", "i" }, "<D-b>", function() Snacks.explorer() end, { desc = "Toggle Explorer Sidebar (Cmd+B)" })
+
+-- Close Tab: Cmd+W / Quit: Cmd+Q
+map({ "n", "i" }, "<D-w>", function() pcall(vim.cmd, "bdelete") end, { desc = "Close Tab (Cmd+W)" })
+map({ "n", "i", "s", "x", "t" }, "<D-q>", function() _G.SmartQuit() end, { desc = "Quit Minimal (Cmd+Q)" })

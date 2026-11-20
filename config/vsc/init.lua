@@ -12,7 +12,11 @@ local theme_mgr = require("theme")
 local saved_theme = theme_mgr.get_current_theme()
 pcall(vim.cmd, "colorscheme " .. saved_theme)
 
--- 3. Bootstrap lazy.nvim in isolated data directory (~/.local/share/vsc)
+-- 3. Pre-load keymaps & recents bridges so globals exist before dashboard renders
+pcall(require, "recents")
+pcall(require, "keymaps")
+
+-- 4. Bootstrap lazy.nvim in isolated data directory (~/.local/share/vsc)
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"

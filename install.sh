@@ -54,10 +54,22 @@ if ! command -v git >/dev/null 2>&1; then
 fi
 
 # Check Neovim
-if ! command -v nvim >/dev/null 2>&1; then
+NVIM_FOUND=false
+if command -v nvim >/dev/null 2>&1; then
+    NVIM_FOUND=true
+elif [ -x "/opt/homebrew/bin/nvim" ] || [ -x "/usr/local/bin/nvim" ] || [ -x "$HOME/.local/bin/nvim" ]; then
+    NVIM_FOUND=true
+fi
+
+if [ "$NVIM_FOUND" = "false" ]; then
     echo -e "${YELLOW}⚠ Warning: 'nvim' (Neovim) was not found in your PATH.${RESET}"
     if [ "$PLATFORM" = "macOS" ]; then
-        echo -e "  Install with: ${CYAN}brew install neovim${RESET}"
+        if command -v brew >/dev/null 2>&1; then
+            echo -e "  Attempting to install Neovim via Homebrew..."
+            brew install neovim || true
+        else
+            echo -e "  Install with: ${CYAN}brew install neovim${RESET} or download from https://neovim.io"
+        fi
     elif command -v pacman >/dev/null 2>&1; then
         echo -e "  Install with: ${CYAN}sudo pacman -S neovim${RESET}"
     elif command -v apt >/dev/null 2>&1; then
@@ -66,7 +78,7 @@ if ! command -v nvim >/dev/null 2>&1; then
         echo -e "  Install with: ${CYAN}sudo dnf install neovim${RESET}"
     fi
 else
-    NVIM_VER="$(nvim --version | head -n 1)"
+    NVIM_VER="$(nvim --version 2>/dev/null | head -n 1 || /opt/homebrew/bin/nvim --version 2>/dev/null | head -n 1 || echo 'Neovim')"
     echo -e "  ${GREEN}✔${RESET} Found ${NVIM_VER}"
 fi
 
@@ -131,6 +143,14 @@ echo -e "  ${GREEN}✔${RESET} Isolated Neovim config installed to ${CYAN}$XDG_C
 cp -rf "$SRC_DIR/config/kitty/minimal.conf" "$XDG_CONFIG_HOME/kitty/minimal.conf"
 echo -e "  ${GREEN}✔${RESET} Kitty editor profile installed to ${CYAN}$XDG_CONFIG_HOME/kitty/minimal.conf${RESET}"
 
+# Pre-bootstrap lazy.nvim plugin engine
+LAZY_DIR="$XDG_DATA_HOME/vsc/lazy/lazy.nvim"
+if [ ! -d "$LAZY_DIR" ]; then
+    echo -e "  ⚡ Pre-bootstrapping lazy.nvim plugin engine..."
+    git clone --filter=blob:none --branch=stable https://github.com/folke/lazy.nvim.git "$LAZY_DIR" >/dev/null 2>&1 || true
+    echo -e "  ${GREEN}✔${RESET} lazy.nvim engine initialized"
+fi
+
 # -------------------------------------------------------------------
 # 5. Install Binaries and Desktop Integration
 # -------------------------------------------------------------------
@@ -168,13 +188,18 @@ if [ "$PLATFORM" = "Linux" ]; then
 fi
 
 # -------------------------------------------------------------------
-# 6. Verify PATH
+# 6. Ensure PATH includes ~/.local/bin
 # -------------------------------------------------------------------
-if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
-    echo -e "\n${YELLOW}ℹ Notice: '$BIN_DIR' is not in your current PATH.${RESET}"
-    echo "  Add this line to your ~/.bashrc or ~/.zshrc:"
-    echo -e "  ${CYAN}export PATH=\"\$HOME/.local/bin:\$PATH\"${RESET}"
-fi
+for RC in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.profile"; do
+    if [ -f "$RC" ]; then
+        if ! grep -q '\.local/bin' "$RC" 2>/dev/null; then
+            echo '' >> "$RC"
+            echo '# Minimal Code Editor' >> "$RC"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$RC"
+            echo -e "  ${GREEN}✔${RESET} Added ~/.local/bin to ${CYAN}$RC${RESET}"
+        fi
+    fi
+done
 
 # -------------------------------------------------------------------
 # 7. Complete!
