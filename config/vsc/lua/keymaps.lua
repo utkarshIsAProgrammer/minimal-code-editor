@@ -114,11 +114,14 @@ local function handle_escape()
       local doc = require("blink.cmp.completion.windows.documentation")
       local list = require("blink.cmp.completion.list")
       if (blink.is_visible and blink.is_visible()) or (menu and menu.win and menu.win:is_open()) then
-        menu.close()
-        doc.close()
-        trigger.hide()
-        list.hide()
-        pcall(blink.cancel)
+        vim.schedule(function()
+          pcall(function()
+            if menu and menu.close then menu.close() end
+            if doc and doc.close then doc.close() end
+            if trigger and trigger.hide then trigger.hide() end
+            if list and list.hide then list.hide() end
+          end)
+        end)
       end
     end)
   end

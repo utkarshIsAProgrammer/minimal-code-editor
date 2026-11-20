@@ -1,4 +1,4 @@
-﻿# ===================================================================
+# ===================================================================
 #  ⚡ Minimal Code Editor - Windows Native PowerShell Installer
 #  Usage: irm https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.ps1 | iex
 # ===================================================================
@@ -9,54 +9,115 @@ $RepoUrl = "https://github.com/utkarshIsAProgrammer/minimal-code-editor.git"
 $Branch  = "main"
 
 Write-Host ""
-Write-Host '  __  __ _       _                 _ ' -ForegroundColor Cyan
-Write-Host ' |  \/  (_)_ __ (_)_ __ ___   __ _| |' -ForegroundColor Cyan
-Write-Host ' | |\/| | | ''_ \| | ''_ ` _ \ / _` | |' -ForegroundColor Cyan
-Write-Host ' | |  | | | | | | | | | | | | (_| | |' -ForegroundColor Cyan
-Write-Host ' |_|  |_|_|_| |_|_|_| |_| |_|\__,_|_|' -ForegroundColor Cyan
+Write-Host "  __  __ _       _                 _ " -ForegroundColor Cyan
+Write-Host " |  \/  (_)_ __ (_)_ __ ___   __ _| |" -ForegroundColor Cyan
+Write-Host " | |\/| | | '_ \| | '_ `` _ \ / _` | |" -ForegroundColor Cyan
+Write-Host " | |  | | | | | | | | | | | | (_| | |" -ForegroundColor Cyan
+Write-Host " |_|  |_|_|_| |_|_|_| |_| |_|\__,_|_|" -ForegroundColor Cyan
 Write-Host "  The Lightning-Fast Minimalist Code Editor" -ForegroundColor White
 Write-Host "  Native Windows Setup" -ForegroundColor DarkCyan
 Write-Host ""
+
+# Helper: Refresh current session PATH from registry
+function Refresh-EnvPath {
+    $machinePath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
+    $userPath    = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
+    $env:Path    = "$machinePath;$userPath"
+}
+
+# Helper: Locate nvim executable across known Windows paths
+function Find-Neovim {
+    if (Get-Command nvim -ErrorAction SilentlyContinue) {
+        return (Get-Command nvim).Source
+    }
+    $candidates = @(
+        "$env:ProgramFiles\Neovim\bin\nvim.exe",
+        "${env:ProgramFiles(x86)}\Neovim\bin\nvim.exe",
+        "$env:LOCALAPPDATA\Programs\Neovim\bin\nvim.exe",
+        "$env:ChocolateyInstall\bin\nvim.exe",
+        "$env:USERPROFILE\scoop\apps\neovim\current\bin\nvim.exe"
+    )
+    foreach ($cand in $candidates) {
+        if ($cand -and (Test-Path $cand)) {
+            $nvimDir = Split-Path -Parent $cand
+            $userPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
+            if ($userPath -notlike "*$nvimDir*") {
+                [Environment]::SetEnvironmentVariable("Path", "$userPath;$nvimDir", [EnvironmentVariableTarget]::User)
+            }
+            $env:Path = "$env:Path;$nvimDir"
+            return $cand
+        }
+    }
+    return $null
+}
 
 # -------------------------------------------------------------------
 # 1. Check Prerequisites
 # -------------------------------------------------------------------
 Write-Host "🔍 Checking prerequisites..." -ForegroundColor White
 
-# Check Git
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Host "✘ Error: 'git' is not installed or not in PATH." -ForegroundColor Red
-    Write-Host "  Install via winget: winget install Git.Git" -ForegroundColor Yellow
-    exit 1
-}
-
-# Check Neovim
-if (-not (Get-Command nvim -ErrorAction SilentlyContinue)) {
+$nvimPath = Find-Neovim
+if (-not $nvimPath) {
     Write-Host "⚠ Warning: 'nvim' (Neovim) was not found in PATH." -ForegroundColor Yellow
     Write-Host "  Attempting to install Neovim via winget..." -ForegroundColor Cyan
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         winget install Neovim.Neovim --accept-source-agreements --accept-package-agreements
+        Refresh-EnvPath
+        $nvimPath = Find-Neovim
+    }
+    if ($nvimPath) {
+        $nvimVer = (& $nvimPath --version | Select-Object -First 1)
+        Write-Host "  ✔ Installed & located: $nvimVer" -ForegroundColor Green
     } else {
-        Write-Host "  Please install Neovim from https://neovim.io and rerun this script." -ForegroundColor Yellow
+        Write-Host "  ⚠ Note: Please install Neovim (>=0.9.0) from https://neovim.io if not installed." -ForegroundColor Yellow
     }
 } else {
-    $nvimVer = (nvim --version | Select-Object -First 1)
+    $nvimVer = (& $nvimPath --version | Select-Object -First 1)
     Write-Host "  ✔ Found $nvimVer" -ForegroundColor Green
 }
 
 # -------------------------------------------------------------------
 # 2. Download / Locate Files
 # -------------------------------------------------------------------
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path -ErrorAction SilentlyContinue
+$ScriptPath = if ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path) { $MyInvocation.MyCommand.Path } else { $null }
+$ScriptDir  = if ($ScriptPath) { Split-Path -Parent $ScriptPath } else { $null }
 
-if ($ScriptDir -and (Test-Path "$ScriptDir\config\vsc\init.lua")) {
+if ($ScriptDir -and (Test-Path (Join-Path $ScriptDir "config\vsc\init.lua"))) {
     $SrcDir = $ScriptDir
     Write-Host "📂 Installing from local directory: $SrcDir" -ForegroundColor Cyan
 } else {
     Write-Host "🌐 Downloading Minimal from GitHub..." -ForegroundColor Cyan
     $TempDir = Join-Path $env:TEMP ("minimal-" + [System.Guid]::NewGuid().ToString().Substring(0, 8))
-    git clone --depth=1 --branch $Branch $RepoUrl $TempDir | Out-Null
-    $SrcDir = $TempDir
+    New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
+
+    $downloadSuccess = $false
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        try {
+            git clone --depth=1 --branch $Branch $RepoUrl $TempDir 2>&1 | Out-Null
+            if (Test-Path (Join-Path $TempDir "config\vsc\init.lua")) {
+                $SrcDir = $TempDir
+                $downloadSuccess = $true
+            }
+        } catch {}
+    }
+
+    if (-not $downloadSuccess) {
+        # Fallback to direct ZIP download from GitHub (zero prerequisites needed!)
+        $ZipUrl  = "https://github.com/utkarshIsAProgrammer/minimal-code-editor/archive/refs/heads/$Branch.zip"
+        $ZipFile = Join-Path $TempDir "minimal.zip"
+        Write-Host "  Downloading archive from GitHub..." -ForegroundColor DarkCyan
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $ZipUrl -OutFile $ZipFile -UseBasicParsing
+        Expand-Archive -Path $ZipFile -DestinationPath $TempDir -Force
+        $ExtractedFolder = Join-Path $TempDir "minimal-code-editor-$Branch"
+        if (Test-Path (Join-Path $ExtractedFolder "config\vsc\init.lua")) {
+            $SrcDir = $ExtractedFolder
+            $downloadSuccess = $true
+        } else {
+            Write-Host "✘ Error: Could not locate configuration files in downloaded archive." -ForegroundColor Red
+            exit 1
+        }
+    }
 }
 
 # -------------------------------------------------------------------
@@ -87,7 +148,7 @@ Copy-Item -Path "$SrcDir\bin\minimal.cmd" -Destination "$BinDir\minimal.cmd" -Fo
 Write-Host "  ✔ Installed command: $BinDir\minimal.cmd" -ForegroundColor Green
 
 # -------------------------------------------------------------------
-# 4. Create Start Menu & Desktop Shortcuts
+# 4. Create Start Menu Shortcut
 # -------------------------------------------------------------------
 try {
     $WshShell = New-Object -ComObject WScript.Shell

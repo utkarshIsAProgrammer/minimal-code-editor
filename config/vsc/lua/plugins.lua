@@ -429,26 +429,27 @@ return {
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = {
           function(cmp)
-            local dismissed = false
-            pcall(function()
-              local menu = require("blink.cmp.completion.windows.menu")
-              local trigger = require("blink.cmp.completion.trigger")
-              local doc = require("blink.cmp.completion.windows.documentation")
-              local list = require("blink.cmp.completion.list")
-              if cmp.is_visible() or (menu and menu.win and menu.win:is_open()) or (trigger and trigger.context ~= nil) then
-                dismissed = true
-                menu.close()
-                doc.close()
-                trigger.hide()
-                list.hide()
-                pcall(cmp.cancel)
-              end
-            end)
+            local is_open = false
+            local menu_ok, menu = pcall(require, "blink.cmp.completion.windows.menu")
+            if (cmp.is_visible and cmp.is_visible()) or (menu_ok and menu and menu.win and menu.win:is_open()) then
+              is_open = true
+            end
             if vim.fn.pumvisible() == 1 then
               vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-e>", true, false, true), "n")
-              dismissed = true
+              return true
             end
-            if dismissed then
+            if is_open then
+              vim.schedule(function()
+                pcall(function()
+                  if menu and menu.close then menu.close() end
+                  local trigger = require("blink.cmp.completion.trigger")
+                  if trigger and trigger.hide then trigger.hide() end
+                  local list = require("blink.cmp.completion.list")
+                  if list and list.hide then list.hide() end
+                  local doc = require("blink.cmp.completion.windows.documentation")
+                  if doc and doc.close then doc.close() end
+                end)
+              end)
               return true
             end
           end,
