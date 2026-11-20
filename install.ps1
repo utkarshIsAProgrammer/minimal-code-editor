@@ -287,16 +287,20 @@ if ($UserPath -notlike "*$BinDir*") {
 function global:minimal { & "$BinDir\minimal.cmd" @args }
 function global:msc { & "$BinDir\minimal.cmd" @args }
 
-# PowerShell Profile integration
+# Clean up any profile file created by older installer versions to eliminate ExecutionPolicy warnings
 try {
     $ProfilePath = $PROFILE
-    $ProfileDir = Split-Path -Parent $ProfilePath -ErrorAction SilentlyContinue
-    if ($ProfileDir -and (-not (Test-Path $ProfileDir))) {
-        New-Item -ItemType Directory -Force -Path $ProfileDir | Out-Null
-    }
-    $aliasSnippet = "`n# Minimal Code Editor`nfunction minimal { & `"$BinDir\minimal.cmd`" @args }`nfunction msc { & `"$BinDir\minimal.cmd`" @args }`n"
-    if (-not (Test-Path $ProfilePath) -or ((Get-Content $ProfilePath -Raw -ErrorAction SilentlyContinue) -notlike "*minimal.cmd*")) {
-        Add-Content -Path $ProfilePath -Value $aliasSnippet -Force -ErrorAction SilentlyContinue
+    if ($ProfilePath -and (Test-Path $ProfilePath)) {
+        $content = Get-Content $ProfilePath -Raw -ErrorAction SilentlyContinue
+        if ($content -and ($content -like "*# Minimal Code Editor*")) {
+            $cleaned = ($content -replace "(?ms)# Minimal Code Editor\r?\nfunction minimal[^\r\n]*\r?\nfunction msc[^\r\n]*", "").Trim()
+            if ($cleaned -eq "") {
+                Remove-Item -Force $ProfilePath -ErrorAction SilentlyContinue
+                Write-Host "  ✔ Cleaned up profile to prevent ExecutionPolicy warnings" -ForegroundColor Green
+            } else {
+                Set-Content -Path $ProfilePath -Value $cleaned -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
 } catch {}
 
