@@ -796,44 +796,97 @@ return {
   {
     "williamboman/mason.nvim",
     lazy = false,
-    opts = {},
+    opts = {
+      ui = {
+        border = "rounded",
+      },
+    },
   },
   {
     "williamboman/mason-lspconfig.nvim",
     lazy = false,
     dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
-    opts = {
-      automatic_installation = true,
-      ensure_installed = {
-        "lua_ls",
-        "gopls",
-        "pyright",
-        "ts_ls",
-        "html",
-        "cssls",
-        "jsonls",
-        "emmet_ls",
-      },
-      handlers = {
-        function(server_name)
-          local ok, lspconfig = pcall(require, "lspconfig")
-          if ok and lspconfig[server_name] then
-            local caps = {}
-            local ok_blink, blink = pcall(require, "blink.cmp")
-            if ok_blink then
-              caps = blink.get_lsp_capabilities()
-            end
+    opts = function()
+      -- Only auto-install LSPs whose runtime dependencies exist on the host system.
+      -- This prevents blocking "[mason-lspconfig] failed to install..." popups on fresh machines.
+      local ensure = { "lua_ls" }
+      local has_npm = (vim.fn.executable("npm") == 1) or (vim.fn.executable("node") == 1)
+      local has_go  = (vim.fn.executable("go") == 1)
 
-            -- Special high-performance config for Go (gopls)
-            if server_name == "gopls" then
+      if has_npm then
+        vim.list_extend(ensure, { "pyright", "ts_ls", "html", "cssls", "jsonls", "emmet_ls" })
+      end
+
+      if has_go then
+        table.insert(ensure, "gopls")
+      end
+
+      return {
+        automatic_installation = false,
+        ensure_installed = ensure,
+        handlers = {
+          function(server_name)
+            local ok, lspconfig = pcall(require, "lspconfig")
+            if ok and lspconfig[server_name] then
+              local caps = {}
+              local ok_blink, blink = pcall(require, "blink.cmp")
+              if ok_blink then
+                caps = blink.get_lsp_capabilities()
+              end
+
+              -- Special high-performance config for Go (gopls)
+              if server_name == "gopls" then
+                lspconfig.gopls.setup({
+                  capabilities = caps,
+                  settings = {
+                    gopls = {
+                      analyses = {
+                        unusedparams = true,
+                        shadow = true,
+                      },
+                      staticcheck = true,
+                      gofumpt = true,
+                      completeUnimported = true,
+                      usePlaceholders = true,
+                    },
+                  },
+                })
+                return
+              end
+
+              lspconfig[server_name].setup({
+                capabilities = caps,
+              })
+            end
+          end,
+        },
+      }
+    end,
+  },
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    config = function()
+      -- Attach to system-installed LSPs if available on PATH
+      local ok, lspconfig = pcall(require, "lspconfig")
+      if not ok then return end
+
+      local caps = {}
+      local ok_blink, blink = pcall(require, "blink.cmp")
+      if ok_blink then
+        caps = blink.get_lsp_capabilities()
+      end
+
+      local common_servers = { "gopls", "pyright", "ts_ls", "lua_ls", "html", "cssls", "jsonls", "emmet_ls" }
+      for _, srv in ipairs(common_servers) do
+        if vim.fn.executable(srv) == 1 then
+          pcall(function()
+            if srv == "gopls" then
               lspconfig.gopls.setup({
                 capabilities = caps,
                 settings = {
                   gopls = {
-                    analyses = {
-                      unusedparams = true,
-                      shadow = true,
-                    },
+                    analyses = { unusedparams = true, shadow = true },
                     staticcheck = true,
                     gofumpt = true,
                     completeUnimported = true,
@@ -841,19 +894,12 @@ return {
                   },
                 },
               })
-              return
+            else
+              lspconfig[srv].setup({ capabilities = caps })
             end
-
-            lspconfig[server_name].setup({
-              capabilities = caps,
-            })
-          end
-        end,
-      },
-    },
-  },
-  {
-    "neovim/nvim-lspconfig",
-    event = { "BufReadPre", "BufNewFile" },
+          end)
+        end
+      end
+    end,
   },
 }
