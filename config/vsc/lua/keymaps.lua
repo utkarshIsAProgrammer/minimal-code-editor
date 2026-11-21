@@ -1413,6 +1413,7 @@ local function delete_word_left()
       vim.api.nvim_buf_set_lines(0, row - 2, row, false, { prev_line .. cur_line })
       vim.api.nvim_win_set_cursor(0, { row - 1, #prev_line })
     end
+    vim.cmd("startinsert")
     return
   end
   local line = vim.api.nvim_get_current_line()
@@ -1430,6 +1431,7 @@ local function delete_word_left()
   local new_line = new_before .. line:sub(col + 1)
   vim.api.nvim_set_current_line(new_line)
   vim.api.nvim_win_set_cursor(0, { row, #new_before })
+  vim.cmd("startinsert")
 end
 
 local function delete_word_right()
@@ -1442,6 +1444,7 @@ local function delete_word_right()
       local next_line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
       vim.api.nvim_buf_set_lines(0, row - 1, row + 1, false, { line .. next_line })
     end
+    vim.cmd("startinsert")
     return
   end
   local after = line:sub(col + 1)
@@ -1458,6 +1461,7 @@ local function delete_word_right()
   local new_line = line:sub(1, col) .. new_after
   vim.api.nvim_set_current_line(new_line)
   vim.api.nvim_win_set_cursor(0, { row, col })
+  vim.cmd("startinsert")
 end
 
 map({ "i", "n", "x", "s" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
