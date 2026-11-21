@@ -344,6 +344,27 @@ return {
           },
         },
         sources = {
+          commands = {
+            confirm = function(picker, item)
+              picker:close()
+              if item and item.cmd then
+                vim.schedule(function()
+                  local cmd = item.cmd:gsub("^:", "")
+                  local ok = pcall(vim.cmd, cmd)
+                  if not ok then
+                    -- If command requires arguments or failed, prefill cmdline with trailing space
+                    vim.schedule(function()
+                      vim.api.nvim_input(":" .. cmd .. " ")
+                    end)
+                  else
+                    if vim.bo.buftype == "" and vim.bo.modifiable then
+                      pcall(vim.cmd, "startinsert")
+                    end
+                  end
+                end)
+              end
+            end,
+          },
           files = {
             hidden = false,
             ignored = false,
@@ -567,6 +588,9 @@ return {
       end,
       keymap = {
         preset = "super-tab",
+        ["<C-k>"] = {}, -- Disable <C-k> buffer-local map so VS Code chords (Ctrl+K Ctrl+T / Ctrl+K Ctrl+S) are NEVER swallowed!
+        ["<C-S-Space>"] = { "show_signature", "hide_signature", "fallback" },
+        ["<M-k>"] = { "show_signature", "hide_signature", "fallback" },
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = {
           function(cmp)

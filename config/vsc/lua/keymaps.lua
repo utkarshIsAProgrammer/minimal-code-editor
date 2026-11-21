@@ -1950,7 +1950,9 @@ function _G.EditKeybindings()
 end
 
 map({ "n", "i" }, "<C-k><C-s>", _G.EditKeybindings, { desc = "Edit Keybindings (Ctrl+K Ctrl+S)" })
+map({ "n", "i" }, "<C-k>s", _G.EditKeybindings, { desc = "Edit Keybindings (Ctrl+K s)" })
 map({ "n", "i" }, "<C-k><C-S>", _G.EditKeybindings, { desc = "Edit Keybindings (Ctrl+K Ctrl+S)" })
+map({ "n", "i" }, "<C-k>S", _G.EditKeybindings, { desc = "Edit Keybindings (Ctrl+K Shift+S)" })
 vim.api.nvim_create_user_command("Keybinds", _G.EditKeybindings, { desc = "Edit keybindings file" })
 vim.api.nvim_create_user_command("Shortcuts", _G.EditKeybindings, { desc = "Edit keybindings file" })
 vim.api.nvim_create_user_command("EditKeybinds", _G.EditKeybindings, { desc = "Edit keybindings file" })
@@ -2617,6 +2619,9 @@ local function show_hover_or_diagnostic()
 end
 
 map({ "n", "i" }, "<C-k><C-i>", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (VS Code Ctrl+K Ctrl+I)" })
+map({ "n", "i" }, "<C-k>i", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (VS Code Ctrl+K i)" })
+map({ "n", "i" }, "<C-k><C-I>", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (VS Code Ctrl+K Shift+I)" })
+map({ "n", "i" }, "<C-k>I", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (VS Code Ctrl+K Shift+I)" })
 map("n", "gh", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (gh)" })
 
 map({ "n", "i" }, "<F12>", function() Snacks.picker.lsp_definitions() end, { desc = "Go to Definition (F12)" })
@@ -2666,18 +2671,44 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- -------------------------------------------------------------------
--- 23. Color Themes & Theme Toggling (VS Code Ctrl+K Ctrl+T / F10)
+-- 23. Color Themes & Theme Toggling (VS Code Ctrl+K Ctrl+T / F10 / Alt+T)
 -- -------------------------------------------------------------------
--- VS Code Standard Theme Picker: Ctrl+K Ctrl+T
+-- VS Code Standard Theme Picker: Ctrl+K Ctrl+T, Ctrl+K t, Alt+T
 map({ "n", "i" }, "<C-k><C-t>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K Ctrl+T)" })
+map({ "n", "i" }, "<C-k>t", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K t)" })
+map({ "n", "i" }, "<C-k><C-T>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K Shift+T)" })
+map({ "n", "i" }, "<C-k>T", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K Shift+T)" })
+map({ "n", "i" }, "<M-t>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (Alt+T)" })
 
--- Quick Theme Toggle: F10 (cycles Dark Magic -> Cyber Aurora -> Medieval Scriptorium)
+-- Quick Theme Toggle: F10 / Alt+F10 (cycles Dark Magic -> Cyber Aurora -> Medieval Scriptorium)
 map({ "n", "i" }, "<F10>", function() _G.ToggleTheme() end, { desc = "Toggle Theme (F10)" })
+map({ "n", "i" }, "<M-F10>", function() _G.ToggleTheme() end, { desc = "Toggle Theme (Alt+F10)" })
 
--- User commands
-vim.api.nvim_create_user_command("Theme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
-vim.api.nvim_create_user_command("ColorTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
-vim.api.nvim_create_user_command("SelectTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
+-- User commands with argument support (:Theme cyberaurora, :Theme medieval, :Theme darkmagic) & autocompletion
+local function handle_theme_cmd(opts)
+  local arg = opts.args and vim.trim(opts.args) or ""
+  if arg ~= "" then
+    require("theme").set_theme(arg, true)
+  else
+    _G.SelectThemePicker()
+  end
+end
+
+local theme_complete = function(arglead)
+  local theme = require("theme")
+  local matches = {}
+  for _, t in ipairs(theme.themes) do
+    if t.name:lower():find(arglead:lower(), 1, true) then
+      table.insert(matches, t.name)
+    end
+  end
+  return matches
+end
+
+vim.api.nvim_create_user_command("Theme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
+vim.api.nvim_create_user_command("ColorTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
+vim.api.nvim_create_user_command("SelectTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
+vim.api.nvim_create_user_command("ChangeTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
 vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between Dark Magic, Cyber Aurora, and Medieval Scriptorium" })
 
 -- Indent Rainbow Guides Command

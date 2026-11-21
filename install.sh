@@ -159,8 +159,12 @@ echo -e "\n🚀 Installing executable commands..."
 
 cp -f "$SRC_DIR/bin/minimal" "$BIN_DIR/minimal"
 cp -f "$SRC_DIR/bin/msc" "$BIN_DIR/msc"
+if [ -f "$SRC_DIR/bin/minimal-font" ]; then
+    cp -f "$SRC_DIR/bin/minimal-font" "$BIN_DIR/minimal-font"
+    chmod +x "$BIN_DIR/minimal-font"
+fi
 chmod +x "$BIN_DIR/minimal" "$BIN_DIR/msc"
-echo -e "  ${GREEN}✔${RESET} Installed commands: ${CYAN}minimal${RESET} and ${CYAN}msc${RESET} to ${CYAN}$BIN_DIR/${RESET}"
+echo -e "  ${GREEN}✔${RESET} Installed commands: ${CYAN}minimal${RESET}, ${CYAN}msc${RESET}, and ${CYAN}minimal-font${RESET} to ${CYAN}$BIN_DIR/${RESET}"
 
 if [ "$PLATFORM" = "Linux" ]; then
     # Standard Icons & Hicolor spec (prevents older cached icons from overriding)

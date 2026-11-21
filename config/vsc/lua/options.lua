@@ -21,9 +21,9 @@ opt.mousemoveevent = false  -- Disable mouse movement tracking to prevent floati
 
 -- Fast key timeout: Esc responds instantly without modal waiting/lag
 opt.timeout = true
-opt.timeoutlen = 300
+opt.timeoutlen = 1000 -- 1s comfortable window for VS Code multi-key chords (Ctrl+K Ctrl+T / Ctrl+K Ctrl+S)
 opt.ttimeout = true
-opt.ttimeoutlen = 10
+opt.ttimeoutlen = 10  -- 10ms instantaneous escape sequence resolution
 
 -- Programmer Font: CaskaydiaCove Nerd Font Mono with universal fallbacks
 opt.guifont = "CaskaydiaCove Nerd Font Mono,JetBrainsMono Nerd Font,Cascadia Code,Consolas,Courier New:h11.5"

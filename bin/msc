@@ -54,6 +54,14 @@ elif [ -x "/Applications/kitty.app/Contents/MacOS/kitty" ]; then
     KITTY_BIN="/Applications/kitty.app/Contents/MacOS/kitty"
 fi
 
+# Check for Ghostty in PATH or macOS Applications
+GHOSTTY_BIN=""
+if command -v ghostty >/dev/null 2>&1; then
+    GHOSTTY_BIN="ghostty"
+elif [ -x "/Applications/Ghostty.app/Contents/MacOS/ghostty" ]; then
+    GHOSTTY_BIN="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+fi
+
 # Check if already running inside Minimal's embedded terminal
 if [ -n "$NVIM" ]; then
     if [ $# -eq 0 ]; then
@@ -77,13 +85,28 @@ if [ -n "$NVIM" ]; then
     exit 0
 fi
 
-# Launch in Kitty if available
-if [ -n "$KITTY_BIN" ]; then
-    if [ -f "$KITTY_CONF" ]; then
-        exec "$KITTY_BIN" --config "$KITTY_CONF" --class vsc -T "Minimal" -- "$NVIM_BIN" "$@"
-    else
-        exec "$KITTY_BIN" --class vsc -T "Minimal" -- "$NVIM_BIN" "$@"
+# Terminal Launcher Logic:
+# 1. If already inside Kitty or Ghostty, execute Neovim directly in the current terminal window.
+# 2. If outside, prefer Kitty with Minimal's dedicated profile.
+# 3. If Kitty is not present, use Ghostty.
+# 4. If launched from GUI/desktop without a terminal (! [ -t 0 ]), find any installed graphical terminal emulator.
+# 5. Otherwise, run in the current shell.
+if [ -z "$KITTY_WINDOW_ID" ] && [ -z "$GHOSTTY_RESOURCES_DIR" ]; then
+    if [ -n "$KITTY_BIN" ]; then
+        if [ -f "$KITTY_CONF" ]; then
+            exec "$KITTY_BIN" --config "$KITTY_CONF" --class vsc -T "Minimal" -- "$NVIM_BIN" "$@"
+        else
+            exec "$KITTY_BIN" --class vsc -T "Minimal" -- "$NVIM_BIN" "$@"
+        fi
+    elif [ -n "$GHOSTTY_BIN" ]; then
+        exec "$GHOSTTY_BIN" --title="Minimal" --class="vsc" -e "$NVIM_BIN" "$@"
+    elif ! [ -t 0 ]; then
+        for term in wezterm alacritty foot konsole gnome-terminal xfce4-terminal x-terminal-emulator xterm; do
+            if command -v "$term" >/dev/null 2>&1; then
+                exec "$term" -e "$NVIM_BIN" "$@"
+            fi
+        done
     fi
-else
-    exec "$NVIM_BIN" "$@"
 fi
+
+exec "$NVIM_BIN" "$@"

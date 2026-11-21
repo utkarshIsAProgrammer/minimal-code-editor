@@ -91,7 +91,7 @@ function M.toggle()
   M.set_theme(next_theme, true)
 end
 
--- Interactive theme picker with active selection tracking
+-- Interactive theme picker with active selection tracking & live preview
 function M.picker()
   local current_theme = vim.g.colors_name or M.get_current_theme()
   local active_idx = 1
@@ -103,7 +103,7 @@ function M.picker()
       active_idx = idx
     end
     table.insert(items, {
-      text = t.icon .. t.label .. (is_active and "  [Active]" or "") .. "  -  " .. t.desc,
+      text = t.name,
       name = t.name,
       label = t.label,
       desc = t.desc,
@@ -117,6 +117,8 @@ function M.picker()
     snacks.picker({
       title = "🎨 Color Themes",
       items = items,
+      preview = "colorscheme",
+      preset = "vertical",
       format = function(item)
         if item.is_active then
           return {
@@ -142,8 +144,17 @@ function M.picker()
       end,
       confirm = function(picker, item)
         picker:close()
-        if item and item.name then
-          M.set_theme(item.name, true)
+        if item and (item.name or item.text) then
+          if picker.preview and picker.preview.state then
+            picker.preview.state.colorscheme = nil
+          end
+          local theme_name = item.name or item.text
+          vim.schedule(function()
+            M.set_theme(theme_name, true)
+            if vim.bo.buftype == "" and vim.bo.modifiable then
+              pcall(vim.cmd, "startinsert")
+            end
+          end)
         end
       end,
     })
@@ -155,7 +166,13 @@ function M.picker()
     end
     vim.ui.select(options, { prompt = "🎨 Select Color Theme: ", default = options[active_idx] }, function(choice, idx)
       if idx and M.themes[idx] then
-        M.set_theme(M.themes[idx].name, true)
+        local chosen = M.themes[idx].name
+        vim.schedule(function()
+          M.set_theme(chosen, true)
+          if vim.bo.buftype == "" and vim.bo.modifiable then
+            pcall(vim.cmd, "startinsert")
+          end
+        end)
       end
     end)
   end
