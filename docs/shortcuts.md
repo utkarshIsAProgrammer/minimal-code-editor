@@ -12,15 +12,13 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 | Linux / Windows | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
-| <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Normal Mode** | Dismisses popups/suggestions and cleanly enters Normal mode. |
-| `:` *(in Normal mode)* | `:` | **Command Line** | Enters Command-line mode (e.g. `:w`, `:q`, `:Mason`). |
-| <kbd>i</kbd> | <kbd>i</kbd> | **Write Mode (Insert)** | Returns to typing mode right at cursor position. |
+| <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Dismiss Popups** | Dismisses suggestion popups/menus cleanly with zero cursor jitter. |
 | <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>S</kbd> | **Save File** | Saves current file. If untitled, prompts for filename/path. |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | **Save As** | Prompts to save the file under a new name or path. |
 | <kbd>Ctrl</kbd>+<kbd>W</kbd> | <kbd>⌘</kbd>+<kbd>W</kbd> | **Close Tab** | Closes active editor tab / buffer. |
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | <kbd>⌘</kbd>+<kbd>Q</kbd> | **Quit Minimal** | Prompts to save modified files, then exits cleanly. |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | **Command Palette** | Search and execute any editor command. |
-| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>S</kbd> | **Edit Keybindings** | Opens keybindings configuration file directly. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | **Command Palette** | Search and immediately execute any editor command. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>S</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>s</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>S</kbd> | **Edit Keybindings** | Opens keybindings configuration file directly. |
 
 ---
 
@@ -88,6 +86,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | Linux / Windows | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>.</kbd> *(or <kbd>Alt</kbd>+<kbd>Enter</kbd>)* | <kbd>⌘</kbd>+<kbd>.</kbd> | **Quick Fix / Solutions**| Shows available code actions, imports, and autocorrect. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>I</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>i</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>I</kbd> | **Hover & Diagnostics** | Shows documentation hover and detailed problem diagnostics. |
 | <kbd>F2</kbd> | <kbd>F2</kbd> | **Rename Symbol** | Renames symbol across the entire project safely. |
 | <kbd>F12</kbd> | <kbd>F12</kbd> | **Go to Definition** | Jumps to function/class/variable declaration. |
 | <kbd>Shift</kbd>+<kbd>F12</kbd> | <kbd>Shift</kbd>+<kbd>F12</kbd> | **Find References** | Shows all references across the project. |
@@ -95,7 +94,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | <kbd>Shift</kbd>+<kbd>F8</kbd> | <kbd>Shift</kbd>+<kbd>F8</kbd> | **Previous Problem** | Jumps to previous error / warning in buffer. |
 | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | **Format Document** | Formats buffer via Prettier / Conform / LSP. |
 | <kbd>F5</kbd> | <kbd>F5</kbd> | **Run File** | Executes active Python, Go, Node, Rust, or C file. |
-| <kbd>Ctrl</kbd>+<kbd>E</kbd> | <kbd>Ctrl</kbd>+<kbd>E</kbd> | **Dismiss Suggestions** | Closes completion popup while remaining in Insert mode. |
+| <kbd>Esc</kbd> *(or <kbd>Ctrl</kbd>+<kbd>E</kbd> / <kbd>Shift</kbd>+<kbd>Esc</kbd>)* | <kbd>Esc</kbd> | **Dismiss Suggestions** | Closes completion popup synchronously with zero cursor shift. |
 
 ---
 
@@ -103,5 +102,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 | Linux / Windows | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
-| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Fuzzy-select color theme. |
-| <kbd>F10</kbd> | <kbd>F10</kbd> | **Cycle Themes** | Cycles: 🔮 Dark Magic → 🌌 Cyber Aurora → 📜 Medieval Scriptorium. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Interactive theme picker with live preview. |
+| <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | **Cycle Themes** | Quick-cycles: 🔮 Dark Magic → 🌌 Cyber Aurora → 📜 Medieval Scriptorium. |
+| `:Theme <name>` | `:Theme <name>` | **Command Switch** | Directly sets theme with autocomplete (`:Theme cyberaurora`, `:Theme darkmagic`). |
+| `:IndentRainbow` | `:IndentRainbow` | **Indent Scope** | Toggles glowing LazyVim-style emerald indent scope guides. |
