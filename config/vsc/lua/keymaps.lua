@@ -1027,16 +1027,16 @@ function _G.OpenFolderPicker(target_dir)
       local p_handle = io.popen(fd_cmd)
       if p_handle then
         for line in p_handle:lines() do
-          line = vim.trim(line)
-          if line ~= "" and not seen[line] then
-            seen[line] = true
-            local is_d = vim.fn.isdirectory(line) == 1
-            local rel = vim.fn.fnamemodify(line, ":~:.")
+          local trimmed = vim.trim(line)
+          if trimmed ~= "" and not seen[trimmed] then
+            seen[trimmed] = true
+            local is_d = vim.fn.isdirectory(trimmed) == 1
+            local rel = vim.fn.fnamemodify(trimmed, ":~:.")
             if is_d and not rel:match("/$") then rel = rel .. "/" end
             table.insert(items, {
               text = prefix .. rel,
-              name = vim.fn.fnamemodify(line, ":t") .. (is_d and "/" or ""),
-              file = line,
+              name = vim.fn.fnamemodify(trimmed, ":t") .. (is_d and "/" or ""),
+              file = trimmed,
               dir = is_d,
             })
           end
