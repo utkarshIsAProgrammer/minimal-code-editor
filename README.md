@@ -118,9 +118,12 @@ minimal main.py     # Opens specific file
 | **Quick Fix / Solutions**| <kbd>Ctrl</kbd>+<kbd>.</kbd> *(or <kbd>Alt</kbd>+<kbd>Enter</kbd>)* | <kbd>⌘</kbd>+<kbd>.</kbd> | LSP code actions, imports & autocorrect |
 | **Hover / Problem Details**| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>I</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>i</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>I</kbd> | Shows hover documentation and diagnostic problem details |
 | **Format Document** | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | Formats buffer code |
-| **Run Current File** | <kbd>F5</kbd> | <kbd>F5</kbd> | Executes active code file |
-| **Color Theme Picker** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | Interactive theme picker with live preview |
-| **Cycle Theme** | <kbd>F10</kbd> | <kbd>F10</kbd> | Dark Magic → Cyber Aurora → Medieval Scriptorium |
+| **Run Current File** | <kbd>F5</kbd> *(or <kbd>Ctrl</kbd>+<kbd>F5</kbd>)* | <kbd>F5</kbd> *(or <kbd>⌘</kbd>+<kbd>F5</kbd>)* | Executes active code file in bottom terminal drawer |
+| **Yazi Doc Review** | <kbd>Alt</kbd>+<kbd>Y</kbd> *(or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | <kbd>⌥</kbd>+<kbd>Y</kbd> *(or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | Floating Yazi document reviewer & chooser |
+| **Markdown Live Review**| <kbd>Alt</kbd>+<kbd>M</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | <kbd>⌥</kbd>+<kbd>M</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | In-editor rich Markdown formatting |
+| **Zen / Focus Mode** | <kbd>Alt</kbd>+<kbd>Z</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | <kbd>⌥</kbd>+<kbd>Z</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | Distraction-free document writing mode |
+| **Color Theme Picker** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | Interactive theme picker with live syntax showroom |
+| **Cycle Theme** | <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | Sequential cycle through all 9 bespoke themes |
 | **Edit Keybindings** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>S</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>s</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>S</kbd> | Opens keybindings configuration file |
 
 📖 For the full keybindings manual, refer to **[docs/shortcuts.md](docs/shortcuts.md)** or the **[Printable PDF Cheatsheet](docs/shortcuts.pdf)**.

@@ -98,11 +98,22 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ---
 
+## 📖 Documentation, Document Review & Focus Tools
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Alt</kbd>+<kbd>Y</kbd> *(or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | <kbd>⌥</kbd>+<kbd>Y</kbd> *(or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | **Yazi Document Review** | Pops up floating Yazi file manager with instant image, doc and tree preview. Press <kbd>Enter</kbd> to open. |
+| <kbd>Alt</kbd>+<kbd>M</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | <kbd>⌥</kbd>+<kbd>M</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | **In-Editor Markdown Review**| Real-time markdown rendering with icons, interactive checkboxes, tables and GitHub callouts. |
+| <kbd>Alt</kbd>+<kbd>Z</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | <kbd>⌥</kbd>+<kbd>Z</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | **Zen Focus Mode** | Distraction-free reading and writing mode with centered buffer and dimmed chrome. |
+| `:StickyScroll` | `:StickyScroll` | **Sticky Scroll Breadcrumbs** | Pins parent class, function, or document section to the top row while scrolling. |
+
+---
+
 ## 🎨 Themes & Customization
 
 | Linux / Windows | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
-| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Interactive theme picker with live preview. |
-| <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | **Cycle Themes** | Quick-cycles: 🔮 Dark Magic → 🌌 Cyber Aurora → 📜 Medieval Scriptorium. |
-| `:Theme <name>` | `:Theme <name>` | **Command Switch** | Directly sets theme with autocomplete (`:Theme cyberaurora`, `:Theme darkmagic`). |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Interactive theme picker with live syntax showroom preview across all 9 handcrafted themes. |
+| <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | **Cycle Themes** | Quick-cycles: Dark Magic → Cyber Aurora → Medieval → Phosphor → Espresso → Frostbite → Abyssal → Nocturne → Industrial. |
+| `:Theme <name>` | `:Theme <name>` | **Command Switch** | Directly sets theme with autocomplete (`:Theme phosphor`, `:Theme espressonoir`, `:Theme abyssal`, etc.). |
 | `:IndentRainbow` | `:IndentRainbow` | **Indent Scope** | Toggles glowing LazyVim-style emerald indent scope guides. |
