@@ -13,6 +13,19 @@ if [ "$1" = "update" ] || [ "$1" = "--update" ]; then
     exit 0
 fi
 
+# Font selector: minimal font / minimal --font / minimal fonts
+if [ "$1" = "font" ] || [ "$1" = "--font" ] || [ "$1" = "fonts" ]; then
+    shift
+    DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -x "$DIR/minimal-font" ]; then
+        exec "$DIR/minimal-font" "$@"
+    elif command -v minimal-font >/dev/null 2>&1; then
+        exec minimal-font "$@"
+    elif [ -x "$HOME/.local/bin/minimal-font" ]; then
+        exec "$HOME/.local/bin/minimal-font" "$@"
+    fi
+fi
+
 # Locate Neovim binary across standard Unix / macOS paths
 NVIM_BIN=""
 if command -v nvim >/dev/null 2>&1; then
