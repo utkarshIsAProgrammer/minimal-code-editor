@@ -143,6 +143,10 @@ function M.picker()
   local active_idx = 1
   local items = {}
 
+  local showroom_file = vim.fn.stdpath("config") .. "/lua/showroom.lua"
+  local current_buf_file = vim.api.nvim_buf_get_name(0)
+  local preview_target = (current_buf_file ~= "" and vim.fn.filereadable(current_buf_file) == 1) and current_buf_file or showroom_file
+
   for idx, t in ipairs(M.themes) do
     local is_active = (t.name == current_theme)
     if is_active then
@@ -155,6 +159,7 @@ function M.picker()
       desc = t.desc,
       icon = t.icon,
       is_active = is_active,
+      file = preview_target,
     })
   end
 

@@ -2797,3 +2797,156 @@ map({ "n", "i", "t" }, "<D-`>", toggle_terminal, { desc = "Toggle Terminal (Cmd+
 -- Close Tab: Cmd+W / Quit: Cmd+Q
 map({ "n", "i" }, "<D-w>", close_current_buffer, { desc = "Close Tab (Cmd+W)" })
 map({ "n", "i", "s", "x", "t" }, "<D-q>", function() _G.SmartQuit() end, { desc = "Quit Minimal (Cmd+Q)" })
+
+-- ===================================================================
+-- Productivity Tools: Yazi, Code Runner, Zen Mode, Markdown, Sticky Scroll
+-- ===================================================================
+
+-- 1. Floating Yazi Document Review & Chooser
+function _G.OpenYazi(target_path)
+  if vim.fn.executable("yazi") ~= 1 then
+    vim.notify("Yazi is not installed or not in PATH.", vim.log.levels.WARN, { title = "Minimal Editor" })
+    return
+  end
+  local tmp = vim.fn.tempname()
+  local curr_file = target_path or (vim.api.nvim_buf_get_name(0) ~= "" and vim.api.nvim_buf_get_name(0) or vim.fn.getcwd())
+  local cmd = string.format("yazi %s --chooser-file=%s", vim.fn.shellescape(curr_file), vim.fn.shellescape(tmp))
+
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.terminal then
+    local term = snacks.terminal.open(cmd, {
+      win = {
+        position = "float",
+        border = "rounded",
+        width = 0.92,
+        height = 0.88,
+        backdrop = 60,
+      },
+      auto_close = true,
+    })
+    term:on("TermClose", function()
+      term:close()
+      vim.schedule(function()
+        if vim.fn.filereadable(tmp) == 1 then
+          local lines = vim.fn.readfile(tmp)
+          vim.fn.delete(tmp)
+          for _, file in ipairs(lines) do
+            if file and file ~= "" and vim.fn.filereadable(file) == 1 then
+              vim.cmd("edit " .. vim.fn.fnameescape(file))
+            end
+          end
+        end
+      end)
+    end)
+  end
+end
+
+map({ "n", "i" }, "<M-y>", function() _G.OpenYazi() end, { desc = "Open Yazi Document Review & Chooser (Alt+Y)" })
+map({ "n", "i" }, "<C-S-e>", function() _G.OpenYazi() end, { desc = "Open Yazi Document Review (Ctrl+Shift+E)" })
+map({ "n", "i" }, "<D-S-e>", function() _G.OpenYazi() end, { desc = "Open Yazi Document Review (Cmd+Shift+E)" })
+vim.api.nvim_create_user_command("Yazi", function(opts) _G.OpenYazi(opts.args ~= "" and opts.args or nil) end, { nargs = "?", complete = "file", desc = "Open floating Yazi file manager & document reviewer" })
+
+-- 2. One-Key Code Runner (F5 / Ctrl+F5)
+function _G.RunCurrentFile()
+  if vim.bo.modified then
+    pcall(vim.cmd, "w")
+  end
+  local filepath = vim.api.nvim_buf_get_name(0)
+  if filepath == "" then
+    vim.notify("Save the file before running.", vim.log.levels.WARN, { title = "Minimal Code Runner" })
+    return
+  end
+  local ext = vim.fn.expand("%:e"):lower()
+  local file = vim.fn.shellescape(filepath)
+  local runner_cmd = nil
+
+  if ext == "py" then
+    runner_cmd = "python3 " .. file
+  elseif ext == "js" then
+    runner_cmd = "node " .. file
+  elseif ext == "ts" or ext == "tsx" or ext == "jsx" then
+    runner_cmd = (vim.fn.executable("bun") == 1 and "bun " or "npx tsx ") .. file
+  elseif ext == "go" then
+    runner_cmd = "go run " .. file
+  elseif ext == "rs" then
+    runner_cmd = (vim.fn.findfile("Cargo.toml", ".;") ~= "" and "cargo run" or "rustc " .. file .. " -o /tmp/minimal_rs_run && /tmp/minimal_rs_run")
+  elseif ext == "lua" then
+    runner_cmd = "lua " .. file
+  elseif ext == "sh" or ext == "bash" then
+    runner_cmd = "bash " .. file
+  elseif ext == "c" then
+    runner_cmd = "gcc " .. file .. " -o /tmp/minimal_c_run && /tmp/minimal_c_run"
+  elseif ext == "cpp" or ext == "cc" then
+    runner_cmd = "g++ -std=c++17 " .. file .. " -o /tmp/minimal_cpp_run && /tmp/minimal_cpp_run"
+  elseif ext == "html" then
+    runner_cmd = (vim.fn.executable("xdg-open") == 1 and "xdg-open " or "open ") .. file
+  end
+
+  if not runner_cmd then
+    if vim.fn.executable(filepath) == 1 then
+      runner_cmd = file
+    else
+      vim.notify("No runner configured for '." .. ext .. "' files.", vim.log.levels.WARN, { title = "Minimal Code Runner" })
+      return
+    end
+  end
+
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.terminal then
+    snacks.terminal.open(runner_cmd, {
+      win = { position = "bottom", height = 0.35 },
+    })
+  else
+    vim.cmd("split | terminal " .. runner_cmd)
+  end
+end
+
+map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
+map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
+map({ "n", "i" }, "<D-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+F5)" })
+vim.api.nvim_create_user_command("Run", function() _G.RunCurrentFile() end, { desc = "Run active file in terminal drawer" })
+
+-- 3. Zen / Focus Mode
+function _G.ToggleZen()
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.zen then
+    snacks.zen()
+  else
+    vim.notify("Snacks zen is not available.", vim.log.levels.WARN, { title = "Minimal Editor" })
+  end
+end
+
+map({ "n", "i" }, "<M-z>", function() _G.ToggleZen() end, { desc = "Toggle Zen Focus Mode (Alt+Z)" })
+map({ "n", "i" }, "<C-k>z", function() _G.ToggleZen() end, { desc = "Toggle Zen Focus Mode (Ctrl+K Z)" })
+map({ "n", "i" }, "<C-k>Z", function() _G.ToggleZen() end, { desc = "Toggle Zen Focus Mode (Ctrl+K Z)" })
+map({ "n", "i" }, "<D-k>z", function() _G.ToggleZen() end, { desc = "Toggle Zen Focus Mode (Cmd+K Z)" })
+vim.api.nvim_create_user_command("Zen", function() _G.ToggleZen() end, { desc = "Toggle Zen focus mode" })
+vim.api.nvim_create_user_command("Focus", function() _G.ToggleZen() end, { desc = "Toggle Zen focus mode" })
+
+-- 4. Markdown Document Rendering Toggle
+function _G.ToggleMarkdownRender()
+  local ok, rm = pcall(require, "render-markdown")
+  if ok and rm.toggle then
+    rm.toggle()
+  else
+    pcall(vim.cmd, "RenderMarkdown toggle")
+  end
+end
+
+map({ "n", "i" }, "<M-m>", function() _G.ToggleMarkdownRender() end, { desc = "Toggle Markdown Document Review (Alt+M)" })
+map({ "n", "i" }, "<C-k>v", function() _G.ToggleMarkdownRender() end, { desc = "Markdown Preview (VS Code Ctrl+K V)" })
+map({ "n", "i" }, "<D-k>v", function() _G.ToggleMarkdownRender() end, { desc = "Markdown Preview (Cmd+K V)" })
+vim.api.nvim_create_user_command("MarkdownPreview", function() _G.ToggleMarkdownRender() end, { desc = "Toggle in-editor Markdown document rendering" })
+
+-- 5. Sticky Scroll Breadcrumbs Toggle
+function _G.ToggleStickyScroll()
+  local ok, tsc = pcall(require, "treesitter-context")
+  if ok and tsc.toggle then
+    tsc.toggle()
+  else
+    pcall(vim.cmd, "TSContextToggle")
+  end
+end
+
+vim.api.nvim_create_user_command("StickyScroll", function() _G.ToggleStickyScroll() end, { desc = "Toggle Sticky Scroll header breadcrumbs" })
+vim.api.nvim_create_user_command("ToggleStickyScroll", function() _G.ToggleStickyScroll() end, { desc = "Toggle Sticky Scroll header breadcrumbs" })

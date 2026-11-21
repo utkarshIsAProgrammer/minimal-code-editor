@@ -171,6 +171,19 @@ return {
               end,
             },
             {
+              icon = "󰉋 ",
+              key = "y",
+              desc = "Yazi Review (Alt+Y)",
+              action = function()
+                if _G.OpenYazi then
+                  _G.OpenYazi()
+                else
+                  pcall(require, "keymaps")
+                  if _G.OpenYazi then _G.OpenYazi() end
+                end
+              end,
+            },
+            {
               icon = " ",
               key = "r",
               desc = "Recent Projects & Files",
@@ -287,6 +300,17 @@ return {
           duration = { step = 15, total = 250 },
           easing = "outCubic",
         },
+      },
+      zen = {
+        enabled = true,
+        toggles = {
+          dim = true,
+          git_signs = false,
+          mini_diff_signs = false,
+          diagnostics = false,
+          inlay_hints = false,
+        },
+        win = { style = "zen", width = 120 },
       },
       terminal = {
         shell = vim.o.shell,
@@ -1112,5 +1136,57 @@ return {
         end
       end
     end,
+  },
+
+  -- 16. In-Editor Document & Markdown Review (render-markdown.nvim)
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown", "codecompanion" },
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    opts = {
+      heading = {
+        enabled = true,
+        sign = true,
+        icons = { "󰲡 ", "󰲣 ", "󰲥 ", "󰲧 ", "󰲩 ", "󰲫 " },
+      },
+      code = {
+        sign = false,
+        width = "block",
+        right_pad = 1,
+      },
+      bullet = {
+        enabled = true,
+        icons = { "●", "○", "◆", "◇" },
+      },
+      checkbox = {
+        enabled = true,
+        unchecked = { icon = "󰄱 " },
+        checked = { icon = "󰄵 " },
+      },
+      callout = {
+        note = { raw = "[!NOTE]", rendered = "󰋽 Note", highlight = "DiagnosticInfo" },
+        tip = { raw = "[!TIP]", rendered = "󰌶 Tip", highlight = "DiagnosticOk" },
+        important = { raw = "[!IMPORTANT]", rendered = "󰅾 Important", highlight = "DiagnosticWarn" },
+        warning = { raw = "[!WARNING]", rendered = "󰀪 Warning", highlight = "DiagnosticWarn" },
+        caution = { raw = "[!CAUTION]", rendered = "󰳦 Caution", highlight = "DiagnosticError" },
+      },
+    },
+  },
+
+  -- 17. Sticky Scroll Header Breadcrumbs (nvim-treesitter-context)
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      enable = true,
+      max_lines = 3,
+      min_window_height = 0,
+      line_numbers = true,
+      multiline_threshold = 20,
+      trim_scope = "outer",
+      mode = "cursor",
+      separator = nil,
+      zindex = 20,
+    },
   },
 }
