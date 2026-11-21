@@ -458,8 +458,7 @@ return {
   -- 6. Error Lens (Inline Diagnostics Badges & Background + Gutter Signs)
   {
     "rachartier/tiny-inline-diagnostic.nvim",
-    lazy = false,
-    priority = 1000,
+    event = { "LspAttach", "DiagnosticChanged" },
     opts = {
       preset = "modern",
       hi = {
@@ -799,7 +798,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    lazy = false,
+    event = { "BufReadPost", "BufNewFile" },
     opts = {
       ensure_installed = {
         "bash",
@@ -830,7 +829,8 @@ return {
   -- 11. Universal Code Formatter on Save (Conform: Auto-formats all kinds of files on Save / Ctrl+S)
   {
     "stevearc/conform.nvim",
-    lazy = false,
+    event = { "BufWritePre" },
+    cmd = { "ConformInfo" },
     opts = {
       format_on_save = {
         timeout_ms = 3000,
@@ -856,7 +856,7 @@ return {
   -- 12. Mason & LSP Setup (Go gopls, Emmet, Pyright, TS, HTML, CSS, JSON)
   {
     "williamboman/mason.nvim",
-    lazy = false,
+    cmd = { "Mason", "MasonInstall", "MasonLog", "MasonUpdate" },
     opts = {
       ui = {
         border = "rounded",
@@ -865,7 +865,7 @@ return {
   },
   {
     "williamboman/mason-lspconfig.nvim",
-    lazy = false,
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
     opts = function()
       -- Only auto-install LSPs whose runtime dependencies exist on the host system.
