@@ -114,7 +114,7 @@ minimal main.py     # Opens specific file
 | **Format Document** | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | Formats buffer code |
 | **Run Current File** | <kbd>F5</kbd> | <kbd>F5</kbd> | Executes active code file |
 | **Color Theme Picker** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | Selects theme |
-| **Toggle Theme** | <kbd>F10</kbd> | <kbd>F10</kbd> | Dark Magic ↔ Cyber Aurora |
+| **Cycle Theme** | <kbd>F10</kbd> | <kbd>F10</kbd> | Dark Magic → Cyber Aurora → Medieval Scriptorium |
 
 📖 For the full keybindings manual, refer to **[docs/shortcuts.md](docs/shortcuts.md)** or the **[Printable PDF Cheatsheet](docs/shortcuts.pdf)**.
 

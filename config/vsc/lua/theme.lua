@@ -21,6 +21,12 @@ M.themes = {
     desc = "High-contrast Electric Aurora on Deep Midnight",
     icon = "🌌 ",
   },
+  {
+    name = "medieval",
+    label = "Medieval Scriptorium",
+    desc = "Illuminated Manuscript, Dragon Gold & Castle Stone (#0e0d0b)",
+    icon = "📜 ",
+  },
 }
 
 -- Load saved theme or fallback to darkmagic
@@ -71,10 +77,17 @@ function M.set_theme(theme_name, notify)
   end
 end
 
--- Toggle between Dark Magic and Cyber Aurora (F10)
+-- Cycle through the 3 primary handcrafted themes (Dark Magic -> Cyber Aurora -> Medieval Scriptorium)
 function M.toggle()
   local current = vim.g.colors_name or M.get_current_theme()
-  local next_theme = (current == "darkmagic") and "cyberaurora" or "darkmagic"
+  local cycle = { "darkmagic", "cyberaurora", "medieval" }
+  local next_theme = cycle[1]
+  for i, name in ipairs(cycle) do
+    if name == current then
+      next_theme = cycle[(i % #cycle) + 1]
+      break
+    end
+  end
   M.set_theme(next_theme, true)
 end
 

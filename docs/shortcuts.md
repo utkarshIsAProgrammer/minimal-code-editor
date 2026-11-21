@@ -104,4 +104,4 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | Linux / Windows | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Fuzzy-select color theme. |
-| <kbd>F10</kbd> | <kbd>F10</kbd> | **Toggle Theme** | Toggles: 🔮 Dark Magic ↔ 🌌 Cyber Aurora. |
+| <kbd>F10</kbd> | <kbd>F10</kbd> | **Cycle Themes** | Cycles: 🔮 Dark Magic → 🌌 Cyber Aurora → 📜 Medieval Scriptorium. |

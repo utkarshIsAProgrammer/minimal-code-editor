@@ -19,8 +19,8 @@ opt.titlestring = "Minimal - %t"
 opt.updatetime = 300       -- Fast 300ms response for cursor hold, diagnostics & hover
 opt.mousemoveevent = false  -- Disable mouse movement tracking to prevent floating window clipping
 
--- Programmer Font: JetBrainsMono Nerd Font Mono
-opt.guifont = "JetBrainsMono Nerd Font Mono:h11.5"
+-- Programmer Font: CaskaydiaCove Nerd Font Mono (Cascadia Code with programming ligatures for nerds & geeks)
+opt.guifont = "CaskaydiaCove Nerd Font Mono,BlexMono Nerd Font Mono,JetBrainsMono Nerd Font Mono:h11.5"
 
 -- Cursor: Blinking vertical pipe cursor in ALL states (never a block cursor)
 opt.guicursor = "n-v-c-i-ci-ve:ver25-blinkon500-blinkoff500"
