@@ -1,52 +1,107 @@
-# Minimal Editor (msc) - Shortcuts Reference
+# Minimal Code Editor — Standard Shortcuts Reference
 
-This document provides a comprehensive list of shortcuts and commands for the Minimal editor.
+Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS Code.
+
+> **Cross-Platform Design:**
+> - **Linux & Windows:** Use standard <kbd>Ctrl</kbd> and <kbd>Alt</kbd> combinations.
+> - **macOS:** Native <kbd>Cmd (⌘)</kbd> and <kbd>Option (⌥)</kbd> shortcuts.
+
+---
 
 ## 🛠️ General & Application Control
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Esc</kbd> | Switch to Normal Mode | Exits typing mode to Normal mode for command usage (like `:q`) or navigation. |
-| <kbd>Ctrl</kbd> + <kbd>Q</kbd> | Smart Quit | Prompts to save/discard changes before quitting. |
-| `:q` / `:wq` | Command-line Quit | In Normal mode (<kbd>Esc</kbd>), type `:q` and <kbd>Enter</kbd> to quit cleanly. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Command Palette | Fuzzy search all editor commands. |
-| <kbd>Ctrl</kbd> + <kbd>K</kbd> <kbd>Ctrl</kbd> + <kbd>S</kbd> | Edit Keybindings | Opens your shortcut configuration file. |
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Normal Mode** | Dismisses popups/suggestions and cleanly enters Normal mode. |
+| `:` *(in Normal mode)* | `:` | **Command Line** | Enters Command-line mode (e.g. `:w`, `:q`, `:Mason`). |
+| <kbd>i</kbd> | <kbd>i</kbd> | **Write Mode (Insert)** | Returns to typing mode right at cursor position. |
+| <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>S</kbd> | **Save File** | Saves current file. If untitled, prompts for filename/path. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | **Save As** | Prompts to save the file under a new name or path. |
+| <kbd>Ctrl</kbd>+<kbd>W</kbd> | <kbd>⌘</kbd>+<kbd>W</kbd> | **Close Tab** | Closes active editor tab / buffer. |
+| <kbd>Ctrl</kbd>+<kbd>Q</kbd> | <kbd>⌘</kbd>+<kbd>Q</kbd> | **Quit Minimal** | Prompts to save modified files, then exits cleanly. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | **Command Palette** | Search and execute any editor command. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>S</kbd> | **Edit Keybindings** | Opens keybindings configuration file directly. |
+
+---
 
 ## 📂 File & Workspace Management
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Ctrl</kbd> + <kbd>N</kbd> | New File | Opens a new blank editor tab. |
-| <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save File | Saves current file. If new, prompts for filename/path. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Save As | Prompts to save under a new name/path. |
-| <kbd>Ctrl</kbd> + <kbd>P</kbd> | Find File | Search files in workspace. |
-| <kbd>Ctrl</kbd> + <kbd>O</kbd> | Open Folder | Browse and open any directory workspace. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Find in Files | Search text across workspace. |
-| <kbd>Ctrl</kbd> + <kbd>W</kbd> / <kbd>Ctrl</kbd> + <kbd>F4</kbd> | Close Tab | Closes current tab. |
-| <kbd>Ctrl</kbd> + <kbd>Tab</kbd> | Next Tab | Switches to next open buffer tab. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> | Previous Tab | Switches to previous open buffer tab. |
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Ctrl</kbd>+<kbd>N</kbd> | <kbd>⌘</kbd>+<kbd>N</kbd> | **New Blank File** | Creates a fresh, empty buffer and enters typing mode. |
+| <kbd>Ctrl</kbd>+<kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>P</kbd> | **Open File (Quick Open)** | Fuzzy-search and jump to any file in your workspace. |
+| <kbd>Ctrl</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>O</kbd> | **Open Folder** | Select or type any folder path to open as workspace. |
+| <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | **Toggle Explorer Sidebar**| Shows/hides project file tree sidebar. |
+| <kbd>Ctrl</kbd>+<kbd>0</kbd> | <kbd>⌘</kbd>+<kbd>0</kbd> | **Focus Sidebar** | Moves focus into the Explorer sidebar. |
+| <kbd>Ctrl</kbd>+<kbd>1</kbd> | <kbd>⌘</kbd>+<kbd>1</kbd> | **Focus Editor** | Moves focus from sidebar back into the code editor. |
+| <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> *(or <kbd>Ctrl</kbd>+<kbd>`</kbd>)* | **Toggle Terminal** | Opens/closes embedded bottom terminal panel. |
+| <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | **Next Tab** | Cycles forward through open tabs. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> | **Previous Tab** | Cycles backward through open tabs. |
+
+---
+
+## 🔍 Search & Replace
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Ctrl</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>F</kbd> | **Find in File** | Interactive search within the current buffer. |
+| <kbd>Ctrl</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>H</kbd> | **Replace in File** | Interactive find-and-replace in current file. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> | **Find in Files (Grep)** | Global search across all project files. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | **Replace in Files** | Project-wide search and replace across all files. |
+| <kbd>Ctrl</kbd>+<kbd>G</kbd> | <kbd>⌘</kbd>+<kbd>G</kbd> | **Go to Line** | Jump to line number (e.g. `45` or `45:10`). |
+
+---
 
 ## ✏️ Editing & Clipboard
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Undo | Reverts last change. |
-| <kbd>Ctrl</kbd> + <kbd>Y</kbd> | Redo | Reapplies undone changes. |
-| <kbd>Ctrl</kbd> + <kbd>A</kbd> | Select All | Highlights all document text. |
-| <kbd>Ctrl</kbd> + <kbd>C</kbd> | Copy | Copies to clipboard. |
-| <kbd>Ctrl</kbd> + <kbd>V</kbd> | Paste | Pastes from clipboard. |
-| <kbd>Ctrl</kbd> + <kbd>X</kbd> | Cut | Cuts selection to clipboard. |
-| <kbd>Shift</kbd> + <kbd>Delete</kbd> | Delete Line | Deletes the entire current line. |
-| <kbd>Ctrl</kbd> + <kbd>/</kbd> | Toggle Comment | Toggles comment status of line/selection. |
-| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Insert Line Below | Inserts new line below cursor. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> | Insert Line Above | Inserts new line above cursor. |
 
-## 📋 Line Manipulation
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | Copy Line Above | Duplicates/copies the line above. |
-| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd> | Copy Line Up | Duplicates current line upwards. |
-| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd> | Duplicate Line Down | Duplicates current line downwards. |
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Ctrl</kbd>+<kbd>Z</kbd> | <kbd>⌘</kbd>+<kbd>Z</kbd> | **Undo** | Reverts previous edits. |
+| <kbd>Ctrl</kbd>+<kbd>Y</kbd> *(or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> | **Redo** | Reapplies undone changes. |
+| <kbd>Ctrl</kbd>+<kbd>A</kbd> | <kbd>⌘</kbd>+<kbd>A</kbd> | **Select All** | Selects entire document text. |
+| <kbd>Ctrl</kbd>+<kbd>C</kbd> | <kbd>⌘</kbd>+<kbd>C</kbd> | **Copy** | Copies selection or current line to system clipboard. |
+| <kbd>Ctrl</kbd>+<kbd>X</kbd> | <kbd>⌘</kbd>+<kbd>X</kbd> | **Cut** | Cuts selection or current line to system clipboard. |
+| <kbd>Ctrl</kbd>+<kbd>V</kbd> | <kbd>⌘</kbd>+<kbd>V</kbd> | **Paste** | Pastes from system clipboard (auto-indented). |
+| <kbd>Ctrl</kbd>+<kbd>Backspace</kbd> | <kbd>⌥</kbd>+<kbd>Backspace</kbd> | **Delete Word Left** | Deletes word before the cursor. |
+| <kbd>Ctrl</kbd>+<kbd>Delete</kbd> | <kbd>⌥</kbd>+<kbd>Delete</kbd> | **Delete Word Right** | Deletes word after the cursor. |
+| <kbd>Shift</kbd>+<kbd>Delete</kbd> | <kbd>Shift</kbd>+<kbd>Delete</kbd> | **Delete Line** | Deletes entire current line. |
 
-## 🎨 Theme & Appearance
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Ctrl</kbd> + <kbd>K</kbd> <kbd>Ctrl</kbd> + <kbd>T</kbd> | Color Theme Picker | Interactive theme picker. |
-| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> / <kbd>F10</kbd> | Toggle Theme | Cycles through preset themes. |
+---
+
+## 📋 Comments & Line Manipulation
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Ctrl</kbd>+<kbd>/</kbd> | <kbd>⌘</kbd>+<kbd>/</kbd> | **Toggle Line Comment** | Toggles single or multiline comments (`//`, `#`, `--`). |
+| <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>A</kbd> | **Toggle Block Comment**| Toggles block comment (`/* */`, `<!-- -->`). |
+| <kbd>Alt</kbd>+<kbd>Up</kbd> | <kbd>⌥</kbd>+<kbd>Up</kbd> | **Move Line Up** | Slides current line or selection upward. |
+| <kbd>Alt</kbd>+<kbd>Down</kbd> | <kbd>⌥</kbd>+<kbd>Down</kbd> | **Move Line Down** | Slides current line or selection downward. |
+| <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>Down</kbd>| <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>Down</kbd>| **Duplicate Line Down** | Duplicates current line or selection below. |
+| <kbd>Ctrl</kbd>+<kbd>Enter</kbd> | <kbd>⌘</kbd>+<kbd>Enter</kbd> | **Insert Line Below** | Inserts newline below without breaking current line. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd>| <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd>| **Insert Line Above** | Inserts newline above without breaking current line. |
+| <kbd>Ctrl</kbd>+<kbd>D</kbd> | <kbd>⌘</kbd>+<kbd>D</kbd> | **Multi-Cursor Match** | Selects next occurrence of current word / selection. |
+
+---
+
+## 🧠 Code Intelligence & LSP
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Ctrl</kbd>+<kbd>.</kbd> *(or <kbd>Alt</kbd>+<kbd>Enter</kbd>)* | <kbd>⌘</kbd>+<kbd>.</kbd> | **Quick Fix / Solutions**| Shows available code actions, imports, and autocorrect. |
+| <kbd>F2</kbd> | <kbd>F2</kbd> | **Rename Symbol** | Renames symbol across the entire project safely. |
+| <kbd>F12</kbd> | <kbd>F12</kbd> | **Go to Definition** | Jumps to function/class/variable declaration. |
+| <kbd>Shift</kbd>+<kbd>F12</kbd> | <kbd>Shift</kbd>+<kbd>F12</kbd> | **Find References** | Shows all references across the project. |
+| <kbd>F8</kbd> | <kbd>F8</kbd> | **Next Problem** | Jumps to next error / warning in buffer. |
+| <kbd>Shift</kbd>+<kbd>F8</kbd> | <kbd>Shift</kbd>+<kbd>F8</kbd> | **Previous Problem** | Jumps to previous error / warning in buffer. |
+| <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | **Format Document** | Formats buffer via Prettier / Conform / LSP. |
+| <kbd>F5</kbd> | <kbd>F5</kbd> | **Run File** | Executes active Python, Go, Node, Rust, or C file. |
+| <kbd>Ctrl</kbd>+<kbd>E</kbd> | <kbd>Ctrl</kbd>+<kbd>E</kbd> | **Dismiss Suggestions** | Closes completion popup while remaining in Insert mode. |
+
+---
+
+## 🎨 Themes & Customization
+
+| Linux / Windows | macOS | Action | Description |
+| :--- | :--- | :--- | :--- |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Fuzzy-select color theme. |
+| <kbd>F10</kbd> | <kbd>F10</kbd> | **Cycle Themes** | Cycles: 🔮 Dark Magic → 🌿 Nerd Dark → 🌌 Cyber Aurora. |

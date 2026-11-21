@@ -564,10 +564,6 @@ local function setup_dashboard_buffer(buf)
     end,
     ["d"] = function() _G.CreateNewDirectory() end,
     ["o"] = function() _G.OpenFolderPicker() end,
-    ["g"] = function()
-      local ok, snacks = pcall(require, "snacks")
-      if ok and snacks.picker then snacks.picker.grep() end
-    end,
     ["r"] = function() _G.ShowRecentPicker() end,
     ["c"] = function()
       local ok, snacks = pcall(require, "snacks")

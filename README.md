@@ -4,35 +4,37 @@
   <img src="assets/banner.png" alt="Minimal Code Editor Promo Card" width="100%" />
 </p>
 
-Minimal is a lightning-fast, distraction-free code editor combining the raw speed of Neovim with the familiar keybindings of VS Code. It runs inside an optimized Kitty terminal profile with a completely isolated configuration.
+**Minimal** is a lightning-fast, distraction-free code editor combining the raw speed of Neovim with the familiar 1-to-1 muscle memory of VS Code. Built for developers who want instantaneous startup, modeless typing, zero Electron bloat, and standard cross-platform keybindings across Linux, Windows, and macOS.
 
 ---
 
-## ⚡ Key Features
+## ⚡ Key Highlights
 
-- **Sub-25ms Startup:** Minimal memory footprint (~30MB) with zero Electron bloat.
-- **Familiar Muscle Memory:** Modeless typing with standard shortcuts (<kbd>Ctrl+S</kbd>, <kbd>Ctrl+P</kbd>, <kbd>Ctrl+F</kbd>, <kbd>Ctrl+Q</kbd>).
-- **100% Non-Destructive:** Runs under an isolated `NVIM_APPNAME="vsc"` environment. It will **never** overwrite or conflict with your existing Neovim or Kitty configurations.
-- **Cross-Platform:** Full native support across Linux and macOS.
+- **Sub-25ms Startup:** Memory footprint under ~30MB with zero Electron overhead.
+- **Modeless Typing:** Starts directly in write mode—no Vim mode hurdles. Press <kbd>Esc</kbd> to enter Normal mode cleanly with zero key leakage.
+- **1-to-1 VS Code Keybindings:** Exactly one sensible shortcut per operation (<kbd>Ctrl+S</kbd>, <kbd>Ctrl+P</kbd>, <kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>, <kbd>Ctrl+W</kbd>, <kbd>Ctrl+Q</kbd> on Linux/Windows; native <kbd>Cmd ⌘</kbd> on macOS).
+- **Smart Code Suggestions:** Powered by `blink.cmp` with intelligent multi-source completions (LSP, friendly-snippets, file paths, and buffer words).
+- **Out-of-the-Box Multi-Language Support:** First-class syntax highlighting and LSP intelligence for **Go**, **Python**, **JavaScript/TypeScript/React/TSX**, **HTML**, **CSS**, **Tailwind CSS**, **Rust**, **C/C++**, **Lua**, **Bash**, **YAML**, and **JSON**.
+- **100% Isolated & Safe:** Runs under an isolated `NVIM_APPNAME="vsc"` sandbox. It will **never** alter or interfere with your existing Neovim, Kitty, or desktop environment setups.
+- **Self-Updating:** Keep Minimal cutting-edge with a single command: `minimal update`.
 
 ---
 
 ## 📦 Prerequisites
 
-Minimal requires **Neovim** (>= 0.9.0) and **Kitty** terminal.
+Minimal requires **Neovim** (>= 0.10.0, recommended 0.11+) and **Git**. On Linux, it runs inside an optimized **Kitty** terminal window.
 
-### macOS (via Homebrew)
-```bash
-brew install neovim kitty
-```
-
-### Windows
+### Windows (Native PowerShell)
 ```powershell
 winget install Neovim.Neovim Git.Git
 ```
 
-### Linux
+### macOS (via Homebrew)
+```bash
+brew install neovim kitty git
+```
 
+### Linux
 - **Arch Linux / Manjaro / EndeavourOS:**
   ```bash
   sudo pacman -S neovim kitty git
@@ -46,73 +48,81 @@ winget install Neovim.Neovim Git.Git
   sudo dnf install neovim kitty git
   ```
 
-*(Recommended)* Install a Nerd Font such as **JetBrainsMono Nerd Font** for icons.
+*(Recommended)* Install a Nerd Font such as **JetBrainsMono Nerd Font** for clean icons and status glyphs.
 
 ---
 
-## 🚀 Quick Installation
+## 🚀 Installation & Update
 
-### Linux & macOS
-Run the universal installer in your terminal:
-
+### Universal Linux & macOS Installer
+Run in your terminal:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.sh | bash
 ```
 
-### Windows (Native PowerShell)
-Run the native Windows installer in PowerShell:
-
+### Native Windows PowerShell Installer
+Run in PowerShell:
 ```powershell
 irm https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.ps1 | iex
 ```
 
-### Manual Installation
-
-Alternatively, clone the repository and run the setup script:
-
+### Updating Minimal
+Whenever a new feature or fix lands, update seamlessly from your terminal:
 ```bash
-git clone https://github.com/utkarshIsAProgrammer/minimal-code-editor.git
-cd minimal-code-editor
-chmod +x install.sh
-./install.sh
+minimal update
+# or
+msc update
 ```
 
 ---
 
 ## 💻 How to Use
 
-Once installed, launch Minimal from anywhere in your terminal:
+Launch Minimal from anywhere in your terminal or app launcher:
 
 ```bash
-minimal             # Launch empty editor
-minimal .           # Open current directory workspace
-minimal main.py     # Open a specific file
+minimal             # Opens homescreen / empty workspace
+minimal .           # Opens current folder as workspace
+minimal main.py     # Opens specific file
 ```
 
-On Linux, you can also launch **Minimal** directly from your application launcher (Rofi, Wofi, GNOME, KDE, or Hyprland).
+---
+
+## ⌨️ Essential Shortcuts
+
+| Action | Linux & Windows | macOS (`Cmd` / `⌘`) | Description |
+| :--- | :--- | :--- | :--- |
+| **Normal Mode** | <kbd>Esc</kbd> | <kbd>Esc</kbd> | Closes menus/suggestions and enters Normal mode |
+| **Write Mode** | <kbd>i</kbd> | <kbd>i</kbd> | Starts typing right where cursor is |
+| **Save File** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>S</kbd> | Saves current file |
+| **Save As** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Prompts for path/name |
+| **Close Tab** | <kbd>Ctrl</kbd>+<kbd>W</kbd> | <kbd>⌘</kbd>+<kbd>W</kbd> | Closes active tab |
+| **Quit Minimal** | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | <kbd>⌘</kbd>+<kbd>Q</kbd> | Prompts to save dirty files and exits cleanly |
+| **Open File (Quick Open)** | <kbd>Ctrl</kbd>+<kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>P</kbd> | Fuzzy-search files in workspace |
+| **Open Folder** | <kbd>Ctrl</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>O</kbd> | Select or type any folder path to open as workspace |
+| **Command Palette** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | Fuzzy-search all editor commands |
+| **Toggle Sidebar** | <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | Opens/closes Explorer file tree |
+| **Toggle Terminal** | <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> | Opens embedded terminal |
+| **Toggle Line Comment** | <kbd>Ctrl</kbd>+<kbd>/</kbd> | <kbd>⌘</kbd>+<kbd>/</kbd> | Toggles single or multiline comments |
+| **Toggle Block Comment**| <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>A</kbd> | Toggles block comments (`/* */`, `<!-- -->`) |
+| **Find in File** | <kbd>Ctrl</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>F</kbd> | Search text in current file |
+| **Replace in File** | <kbd>Ctrl</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>H</kbd> | Find and replace in current file |
+| **Find in Files (Grep)**| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> | Search across all project files |
+| **Replace in Files** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | Project-wide search and replace |
+| **Multi-Cursor Match** | <kbd>Ctrl</kbd>+<kbd>D</kbd> | <kbd>⌘</kbd>+<kbd>D</kbd> | Add selection to next match |
+| **Quick Fix / Solutions**| <kbd>Ctrl</kbd>+<kbd>.</kbd> *(or <kbd>Alt</kbd>+<kbd>Enter</kbd>)* | <kbd>⌘</kbd>+<kbd>.</kbd> | LSP code actions, imports & autocorrect |
+| **Format Document** | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | Formats buffer code |
+| **Run Current File** | <kbd>F5</kbd> | <kbd>F5</kbd> | Executes active code file |
+| **Color Theme Picker** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | Selects theme |
+| **Cycle Theme** | <kbd>F10</kbd> | <kbd>F10</kbd> | Dark Magic → Nerd Dark → Cyber Aurora |
+
+📖 For the full keybindings manual, refer to **[docs/shortcuts.md](docs/shortcuts.md)** or the **[Printable PDF Cheatsheet](docs/shortcuts.pdf)**.
 
 ---
 
-## ⌨️ Shortcuts Reference
+## 🗑️ Clean Uninstallation
 
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| <kbd>Esc</kbd> | Normal Mode | Switch to command / navigation mode. |
-| <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save File | Saves the active buffer. |
-| <kbd>Ctrl</kbd> + <kbd>P</kbd> | Find File | Fuzzy search files in workspace. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Command Palette | Search all editor actions. |
-| <kbd>Ctrl</kbd> + <kbd>Q</kbd> | Smart Quit | Prompts to save before quitting. |
-| <kbd>Ctrl</kbd> + <kbd>N</kbd> | New File | Opens an empty buffer tab. |
-| <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Tab | Closes current buffer tab. |
-| <kbd>Ctrl</kbd> + <kbd>Tab</kbd> | Next Tab | Switch to next open buffer. |
-
-For the complete shortcuts list, see [docs/shortcuts.md](docs/shortcuts.md).
-
----
-
-## 🗑️ Uninstallation
-
-Minimal is completely isolated. If you ever wish to remove it cleanly:
+Minimal is completely isolated. To uninstall:
 
 ```bash
 cd minimal-code-editor && ./uninstall.sh

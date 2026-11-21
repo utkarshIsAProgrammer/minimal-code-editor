@@ -171,15 +171,6 @@ return {
               end,
             },
             {
-              icon = " ",
-              key = "g",
-              desc = "Search in Files (Ctrl+Shift+F)",
-              action = function()
-                local ok, snacks = pcall(require, "snacks")
-                if ok and snacks.picker then snacks.picker.grep() end
-              end,
-            },
-            {
               icon = " ",
               key = "r",
               desc = "Recent Projects & Files",
