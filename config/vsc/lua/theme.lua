@@ -161,14 +161,26 @@ function M.picker()
   end
 end
 
+-- Apply indent rainbow highlights matching the active color scheme
+function M.apply_indent_rainbow()
+  vim.api.nvim_set_hl(0, "SnacksIndent1", { fg = "#e06c75" }) -- Red / Coral
+  vim.api.nvim_set_hl(0, "SnacksIndent2", { fg = "#e5c07b" }) -- Gold / Yellow
+  vim.api.nvim_set_hl(0, "SnacksIndent3", { fg = "#98c379" }) -- Green
+  vim.api.nvim_set_hl(0, "SnacksIndent4", { fg = "#56b6c2" }) -- Cyan / Teal
+  vim.api.nvim_set_hl(0, "SnacksIndent5", { fg = "#61afef" }) -- Blue
+  vim.api.nvim_set_hl(0, "SnacksIndent6", { fg = "#c678dd" }) -- Purple
+  vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = "#abb2bf", bold = true }) -- Active scope line
+end
+
 -- Listen to any external colorscheme changes and persist them
 vim.api.nvim_create_autocmd("ColorScheme", {
   callback = function(args)
     if args.match and args.match ~= "" then
       M.save_theme(args.match)
     end
+    M.apply_indent_rainbow()
   end,
-  desc = "Persist colorscheme selection across restarts",
+  desc = "Persist colorscheme selection and refresh indent rainbow highlights",
 })
 
 -- Global bridges

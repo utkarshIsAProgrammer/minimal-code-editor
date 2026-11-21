@@ -432,6 +432,29 @@ return {
         },
       },
       explorer = { enabled = true },
+      indent = {
+        enabled = true,
+        priority = 1,
+        char = "│",
+        only_scope = false,
+        only_current = false,
+        hl = {
+          "SnacksIndent1",
+          "SnacksIndent2",
+          "SnacksIndent3",
+          "SnacksIndent4",
+          "SnacksIndent5",
+          "SnacksIndent6",
+        },
+      },
+      scope = {
+        enabled = true,
+        priority = 200,
+        char = "│",
+        underline = false,
+        only_current = false,
+        hl = "SnacksIndentScope",
+      },
     },
     config = function(_, opts)
       -- Vivid Git Status Colors for Sidebar & Explorer
@@ -450,6 +473,15 @@ return {
       vim.api.nvim_set_hl(0, "SnacksDashboardKey", { fg = "#ff9d62", bold = true })
       vim.api.nvim_set_hl(0, "SnacksDashboardFooter", { fg = "#8b949e" })
       vim.api.nvim_set_hl(0, "SnacksDashboardSpecial", { fg = "#b4f09e", bold = true })
+
+      -- Indent Rainbow Highlight Colors (Modern & Vivid)
+      vim.api.nvim_set_hl(0, "SnacksIndent1", { fg = "#e06c75" }) -- Red / Coral
+      vim.api.nvim_set_hl(0, "SnacksIndent2", { fg = "#e5c07b" }) -- Gold / Yellow
+      vim.api.nvim_set_hl(0, "SnacksIndent3", { fg = "#98c379" }) -- Green
+      vim.api.nvim_set_hl(0, "SnacksIndent4", { fg = "#56b6c2" }) -- Cyan / Teal
+      vim.api.nvim_set_hl(0, "SnacksIndent5", { fg = "#61afef" }) -- Blue
+      vim.api.nvim_set_hl(0, "SnacksIndent6", { fg = "#c678dd" }) -- Purple
+      vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = "#abb2bf", bold = true }) -- Active scope line
 
       require("snacks").setup(opts)
     end,
@@ -509,8 +541,11 @@ return {
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = {
           function(cmp)
-            pcall(cmp.cancel)
-            pcall(cmp.hide)
+            if cmp.is_visible() then
+              cmp.cancel()
+              cmp.hide()
+              return true
+            end
             if _G.handle_escape then
               _G.handle_escape()
               return true
@@ -519,6 +554,18 @@ return {
           "fallback",
         },
         ["<C-e>"] = { "cancel", "fallback" },
+        ["<C-Space>"] = {
+          function(cmp)
+            if cmp.is_visible() then
+              cmp.hide()
+              return true
+            else
+              cmp.show()
+              return true
+            end
+          end,
+          "fallback",
+        },
       },
       completion = {
         accept = {
