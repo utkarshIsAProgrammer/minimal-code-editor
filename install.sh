@@ -82,19 +82,32 @@ else
     echo -e "  ${GREEN}✔${RESET} Found ${NVIM_VER}"
 fi
 
-# Check Kitty
-if ! command -v kitty >/dev/null 2>&1; then
-    echo -e "${YELLOW}⚠ Recommended: 'kitty' terminal was not found.${RESET}"
-    echo -e "  Minimal will still run directly in your terminal, but Kitty is recommended for the standalone GUI window."
+# Check Kitty / Ghostty
+if command -v kitty >/dev/null 2>&1 || [ -x "/Applications/kitty.app/Contents/MacOS/kitty" ]; then
+    echo -e "  ${GREEN}✔${RESET} Found Kitty terminal"
+elif command -v ghostty >/dev/null 2>&1 || [ -x "/Applications/Ghostty.app/Contents/MacOS/ghostty" ]; then
+    echo -e "  ${GREEN}✔${RESET} Found Ghostty terminal"
+else
+    echo -e "${YELLOW}⚠ Recommended: 'kitty' or 'ghostty' terminal was not found.${RESET}"
+    echo -e "  Minimal runs in any terminal, but Kitty/Ghostty is recommended for the dedicated GUI profile."
     if [ "$PLATFORM" = "macOS" ]; then
-        echo -e "  Install with: ${CYAN}brew install kitty${RESET}"
+        echo -e "  Install with: ${CYAN}brew install kitty${RESET} or ${CYAN}brew install ghostty${RESET}"
     elif command -v pacman >/dev/null 2>&1; then
-        echo -e "  Install with: ${CYAN}sudo pacman -S kitty${RESET}"
+        echo -e "  Install with: ${CYAN}sudo pacman -S kitty${RESET} or ${CYAN}sudo pacman -S ghostty${RESET}"
     elif command -v apt >/dev/null 2>&1; then
         echo -e "  Install with: ${CYAN}sudo apt install kitty${RESET}"
     fi
-else
-    echo -e "  ${GREEN}✔${RESET} Found Kitty terminal"
+fi
+
+# Check System Clipboard Provider on Linux
+if [ "$PLATFORM" = "Linux" ]; then
+    if command -v wl-copy >/dev/null 2>&1 || command -v xclip >/dev/null 2>&1 || command -v xsel >/dev/null 2>&1; then
+        echo -e "  ${GREEN}✔${RESET} Found system clipboard provider"
+    else
+        echo -e "  ${YELLOW}ℹ Tip: For system clipboard sharing (Ctrl+C / Ctrl+V across external apps), install:${RESET}"
+        echo -e "    Wayland: ${CYAN}sudo apt install wl-clipboard${RESET} / ${CYAN}sudo pacman -S wl-clipboard${RESET}"
+        echo -e "    X11:     ${CYAN}sudo apt install xclip${RESET} / ${CYAN}sudo pacman -S xclip${RESET}"
+    fi
 fi
 
 # -------------------------------------------------------------------
@@ -205,6 +218,18 @@ for RC in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.profile"; do
         fi
     fi
 done
+
+# Fish shell PATH integration
+if [ -d "$HOME/.config/fish" ] || command -v fish >/dev/null 2>&1; then
+    FISH_CONF="$HOME/.config/fish/config.fish"
+    mkdir -p "$HOME/.config/fish"
+    if [ ! -f "$FISH_CONF" ] || ! grep -q '\.local/bin' "$FISH_CONF" 2>/dev/null; then
+        echo '' >> "$FISH_CONF"
+        echo '# Minimal Code Editor' >> "$FISH_CONF"
+        echo 'fish_add_path -a $HOME/.local/bin' >> "$FISH_CONF"
+        echo -e "  ${GREEN}✔${RESET} Added ~/.local/bin to ${CYAN}$FISH_CONF${RESET}"
+    fi
+fi
 
 # -------------------------------------------------------------------
 # 7. Complete!

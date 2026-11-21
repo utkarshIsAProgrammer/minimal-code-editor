@@ -101,8 +101,8 @@ if [ -z "$KITTY_WINDOW_ID" ] && [ -z "$GHOSTTY_RESOURCES_DIR" ]; then
     elif [ -n "$GHOSTTY_BIN" ]; then
         exec "$GHOSTTY_BIN" --title="Minimal" --class="vsc" -e "$NVIM_BIN" "$@"
     elif ! [ -t 0 ]; then
-        for term in wezterm alacritty foot konsole gnome-terminal xfce4-terminal x-terminal-emulator xterm; do
-            if command -v "$term" >/dev/null 2>&1; then
+        for term in wezterm alacritty /Applications/WezTerm.app/Contents/MacOS/wezterm /Applications/Alacritty.app/Contents/MacOS/alacritty foot konsole gnome-terminal xfce4-terminal x-terminal-emulator xterm; do
+            if command -v "$term" >/dev/null 2>&1 || [ -x "$term" ]; then
                 exec "$term" -e "$NVIM_BIN" "$@"
             fi
         done

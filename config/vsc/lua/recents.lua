@@ -74,7 +74,7 @@ function M.add_folder(folder_path)
   local p = vim.fn.fnamemodify(vim.fn.expand(folder_path), ":p"):gsub("/+$", "")
   if is_clutter(p) or vim.fn.isdirectory(p) == 0 then return end
   -- Do not track root or home itself as a standalone project
-  if p == "/" or p == vim.fn.expand("~") then return end
+  if p == "/" or p:match("^%a:[/\\]?$") or p == vim.fn.expand("~") then return end
 
   local data = M.load()
   local new_folders = { p }
