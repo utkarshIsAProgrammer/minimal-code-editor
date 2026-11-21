@@ -97,6 +97,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | <kbd>Shift</kbd>+<kbd>F12</kbd> | <kbd>Shift</kbd>+<kbd>F12</kbd> | **Find References** | Shows all references across the project. |
 | <kbd>F8</kbd> | <kbd>F8</kbd> | **Next Problem** | Jumps to next error / warning in buffer. |
 | <kbd>Shift</kbd>+<kbd>F8</kbd> | <kbd>Shift</kbd>+<kbd>F8</kbd> | **Previous Problem** | Jumps to previous error / warning in buffer. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>D</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>D</kbd> | **Toggle Inline Errors** | Toggles inline virtual text error messages (Error Lens) on/off. |
 | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | **Format Document** | Formats buffer via Prettier / Conform / LSP. |
 | <kbd>F5</kbd> *(or <kbd>Ctrl</kbd>+<kbd>F5</kbd>)* | <kbd>F5</kbd> *(or <kbd>⌘</kbd>+<kbd>F5</kbd>)* | **Run Current File** | Executes active code file in bottom terminal drawer. |
 | <kbd>Alt</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | <kbd>⌥</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | **Live Server Toggle** | Starts/stops local live HTTP reload server with browser auto-open. |

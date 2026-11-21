@@ -562,42 +562,6 @@ return {
   },
 
   -- 6. Error Lens (Inline Diagnostics Badges & Background + Gutter Signs)
-  {
-    "rachartier/tiny-inline-diagnostic.nvim",
-    event = { "LspAttach", "DiagnosticChanged" },
-    opts = {
-      preset = "modern",
-      hi = {
-        error = "DiagnosticError",
-        warn = "DiagnosticWarn",
-        info = "DiagnosticInfo",
-        hint = "DiagnosticHint",
-      },
-      options = {
-        show_source = true,
-        multilines = true,
-        show_all_diags_on_cursorline = true,
-      },
-    },
-    config = function(_, opts)
-      vim.diagnostic.config({
-        virtual_text = false, -- Handled by tiny-inline-diagnostic
-        underline = true,
-        update_in_insert = true,
-        severity_sort = true,
-        signs = {
-          text = {
-            [vim.diagnostic.severity.ERROR] = " ",
-            [vim.diagnostic.severity.WARN] = " ",
-            [vim.diagnostic.severity.HINT] = " ",
-            [vim.diagnostic.severity.INFO] = " ",
-          },
-        },
-      })
-      require("tiny-inline-diagnostic").setup(opts)
-    end,
-  },
-
   -- 7. Auto-Suggestions: Blink.cmp (Fast Rust Completion) + English Dictionary + Snippets
   {
     "saghen/blink.cmp",

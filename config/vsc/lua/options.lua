@@ -89,3 +89,41 @@ opt.wildmenu = true
 opt.wildmode = "longest:full,full"
 opt.wildoptions = "pum"
 opt.wildignore:append({ "*.o", "*.obj", "*.bin", "*.dll", "*.exe", "*/.git/*", "*/node_modules/*", "*/target/*", "*/build/*" })
+
+-- ===================================================================
+-- Inline Diagnostics & Error Lens (Pure VS Code Experience)
+-- Shows error & warning messages directly at the end of the line in real-time!
+-- ===================================================================
+vim.diagnostic.config({
+  virtual_text = {
+    spacing = 4,
+    prefix = function(diagnostic)
+      local icons = {
+        [vim.diagnostic.severity.ERROR] = " ",
+        [vim.diagnostic.severity.WARN] = " ",
+        [vim.diagnostic.severity.HINT] = " ",
+        [vim.diagnostic.severity.INFO] = " ",
+      }
+      return icons[diagnostic.severity] or "● "
+    end,
+    source = "if_many",
+    severity_sort = true,
+  },
+  underline = true,
+  update_in_insert = true,
+  severity_sort = true,
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = " ",
+      [vim.diagnostic.severity.WARN] = " ",
+      [vim.diagnostic.severity.HINT] = " ",
+      [vim.diagnostic.severity.INFO] = " ",
+    },
+  },
+  float = {
+    border = "rounded",
+    source = "if_many",
+    header = "",
+    prefix = "",
+  },
+})

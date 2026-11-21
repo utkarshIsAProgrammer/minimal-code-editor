@@ -2566,6 +2566,19 @@ map({ "n", "i" }, "<C-k><C-I>", show_hover_or_diagnostic, { desc = "Show Hover /
 map({ "n", "i" }, "<C-k>I", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (VS Code Ctrl+K Shift+I)" })
 map("n", "gh", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (gh)" })
 
+-- Toggle Inline Diagnostics (Error Lens) on/off
+function _G.ToggleInlineDiagnostics()
+  local current = vim.diagnostic.config().virtual_text
+  local new_val = not current
+  vim.diagnostic.config({ virtual_text = new_val })
+  vim.notify("Inline Error Messages: " .. (new_val and "Enabled ✓" or "Disabled"), vim.log.levels.INFO, { title = "Minimal Diagnostics" })
+end
+
+vim.api.nvim_create_user_command("ToggleInlineErrors", function() _G.ToggleInlineDiagnostics() end, { desc = "Toggle inline error messages" })
+vim.api.nvim_create_user_command("ToggleDiagnostics", function() _G.ToggleInlineDiagnostics() end, { desc = "Toggle inline error messages" })
+map({ "n", "i" }, "<C-k>d", function() _G.ToggleInlineDiagnostics() end, { desc = "Toggle Inline Errors (Ctrl+K D)" })
+map({ "n", "i" }, "<D-k>d", function() _G.ToggleInlineDiagnostics() end, { desc = "Toggle Inline Errors (Cmd+K D)" })
+
 map({ "n", "i" }, "<F12>", function() Snacks.picker.lsp_definitions() end, { desc = "Go to Definition (F12)" })
 map({ "n", "i" }, "<S-F12>", function() Snacks.picker.lsp_references() end, { desc = "Find All References (Shift+F12)" })
 map({ "n", "i" }, "<F2>", function() vim.lsp.buf.rename() end, { desc = "Rename Symbol (F2)" })
