@@ -44,7 +44,7 @@ fi
 # Check if already running inside Minimal's embedded terminal
 if [ -n "$NVIM" ]; then
     if [ $# -eq 0 ]; then
-        "$NVIM_BIN" --server "$NVIM" --remote-send "<Esc>:lua _G.FocusEditorFromTerminal()<CR>" >/dev/null 2>&1
+        "$NVIM_BIN" --server "$NVIM" --remote-expr "v:lua._G.FocusEditorFromTerminal()" >/dev/null 2>&1
         exit 0
     fi
     for arg in "$@"; do
@@ -57,7 +57,7 @@ if [ -n "$NVIM" ]; then
             *)
                 FULL_PATH="$(realpath "$arg" 2>/dev/null || readlink -f "$arg" 2>/dev/null || echo "$PWD/$arg")"
                 ESCAPED="${FULL_PATH//\'/\\\'}"
-                "$NVIM_BIN" --server "$NVIM" --remote-send "<Esc>:lua _G.OpenFileFromTerminal('$ESCAPED')<CR>" >/dev/null 2>&1
+                "$NVIM_BIN" --server "$NVIM" --remote-expr "v:lua._G.OpenFileFromTerminal('$ESCAPED')" >/dev/null 2>&1
                 ;;
         esac
     done

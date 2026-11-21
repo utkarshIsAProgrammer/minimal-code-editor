@@ -707,6 +707,9 @@ function _G.FocusEditorFromTerminal()
   pcall(function()
     local ok, snacks = pcall(require, "snacks")
     if ok and snacks.terminal then
+      for _, t in ipairs(snacks.terminal.list()) do
+        if t:win_valid() then t:hide() end
+      end
       local ft = vim.bo.filetype
       local bt = vim.bo.buftype
       if ft == "snacks_terminal" or bt == "terminal" then
@@ -714,6 +717,7 @@ function _G.FocusEditorFromTerminal()
       end
     end
   end)
+  vim.cmd("stopinsert")
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
     local buf = vim.api.nvim_win_get_buf(win)
     local bt = vim.bo[buf].buftype
@@ -738,6 +742,11 @@ function _G.OpenFileFromTerminal(target_path)
     if _G.AddRecentFolder then _G.AddRecentFolder(full) end
     pcall(function()
       local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.terminal then
+        for _, t in ipairs(snacks.terminal.list()) do
+          if t:win_valid() then t:hide() end
+        end
+      end
       if ok and snacks.explorer then
         snacks.explorer({ cwd = full })
       end
@@ -753,10 +762,13 @@ function _G.OpenFileFromTerminal(target_path)
   end
   if _G.AddRecentFile then _G.AddRecentFile(full) end
 
-  -- If terminal overlay is visible, toggle it to reveal editor
+  -- If terminal overlay is visible, hide it to reveal editor
   pcall(function()
     local ok, snacks = pcall(require, "snacks")
     if ok and snacks.terminal then
+      for _, t in ipairs(snacks.terminal.list()) do
+        if t:win_valid() then t:hide() end
+      end
       local ft = vim.bo.filetype
       local bt = vim.bo.buftype
       if ft == "snacks_terminal" or bt == "terminal" then
@@ -764,6 +776,8 @@ function _G.OpenFileFromTerminal(target_path)
       end
     end
   end)
+
+  vim.cmd("stopinsert")
 
   -- Switch focus to a regular editable window
   local target_win = nil
@@ -833,7 +847,46 @@ function _G.OpenFolderPicker(target_dir)
   local home = vim.env.HOME or vim.env.USERPROFILE or "."
   local has_fd = vim.fn.executable("fd") == 1
 
-  local function scan_directory(base_dir, pattern)
+  -- Resolves user input into base directory, search prefix for matching, and filter pattern
+  local function resolve_path_and_pattern(raw_query)
+    local q = vim.trim(raw_query or "")
+    if q == "" then
+      return vim.fn.getcwd(), "", ""
+    end
+
+    local expanded = q
+    if expanded:sub(1, 1) == "~" then
+      expanded = home .. expanded:sub(2)
+    end
+
+    -- If ends with slash or is a valid directory
+    if q:match("/$") or vim.fn.isdirectory(expanded) == 1 then
+      local full = vim.fn.fnamemodify(expanded, ":p"):gsub("/+$", "")
+      if vim.fn.isdirectory(full) == 1 then
+        local prefix = q:match("/$") and q or (q .. "/")
+        return full, prefix, ""
+      end
+    end
+
+    -- If contains a slash, split into parent directory and leaf pattern
+    if q:match("/") then
+      local dir_part = vim.fn.fnamemodify(q, ":h")
+      local leaf_part = vim.fn.fnamemodify(q, ":t")
+      local exp_dir = dir_part
+      if exp_dir:sub(1, 1) == "~" then
+        exp_dir = home .. exp_dir:sub(2)
+      end
+      local full_dir = vim.fn.fnamemodify(exp_dir, ":p"):gsub("/+$", "")
+      if vim.fn.isdirectory(full_dir) == 1 then
+        return full_dir, dir_part .. "/", leaf_part:lower()
+      end
+    end
+
+    -- No valid directory found in query: search relative to cwd with pattern
+    return vim.fn.getcwd(), "", q:lower()
+  end
+
+  local function scan_directory(base_dir, prefix, pattern)
     local items = {}
     local seen = {}
 
@@ -841,7 +894,8 @@ function _G.OpenFolderPicker(target_dir)
     local parent_dir = vim.fn.fnamemodify(base_dir, ":h")
     if parent_dir and parent_dir ~= "" and parent_dir ~= base_dir then
       table.insert(items, {
-        text = ".. (Parent: " .. vim.fn.fnamemodify(parent_dir, ":~") .. ")",
+        text = prefix .. "..",
+        name = ".. (Parent Directory: " .. vim.fn.fnamemodify(parent_dir, ":~") .. ")",
         file = parent_dir,
         dir = true,
         is_parent = true,
@@ -869,37 +923,36 @@ function _G.OpenFolderPicker(target_dir)
 
         if allow then
           local full_path = base_dir .. "/" .. name
+          local is_dir = (type == "directory")
           local match = true
           if pattern and pattern ~= "" then
             match = name:lower():find(pattern, 1, true) ~= nil
           end
           if match then
             seen[full_path] = true
-            if type == "directory" then
-              table.insert(dirs, {
-                text = name .. "/",
-                file = full_path,
-                dir = true,
-              })
+            local item = {
+              text = prefix .. name .. (is_dir and "/" or ""),
+              name = name .. (is_dir and "/" or ""),
+              file = full_path,
+              dir = is_dir,
+            }
+            if is_dir then
+              table.insert(dirs, item)
             else
-              table.insert(files, {
-                text = name,
-                file = full_path,
-                dir = false,
-              })
+              table.insert(files, item)
             end
           end
         end
       end
     end
 
-    table.sort(dirs, function(a, b) return a.text:lower() < b.text:lower() end)
-    table.sort(files, function(a, b) return a.text:lower() < b.text:lower() end)
+    table.sort(dirs, function(a, b) return a.name:lower() < b.name:lower() end)
+    table.sort(files, function(a, b) return a.name:lower() < b.name:lower() end)
 
     for _, d in ipairs(dirs) do table.insert(items, d) end
     for _, f in ipairs(files) do table.insert(items, f) end
 
-    -- If searching for a pattern and direct children yielded few/no results, search recursively via fd
+    -- Fallback recursive search via fd if pattern was given and no direct matches found
     if pattern and pattern ~= "" and #dirs == 0 and #files == 0 and has_fd then
       local fd_cmd = string.format("fd --max-depth 4 --color never -E .git -E node_modules -E .cache %s %s 2>/dev/null", vim.fn.shellescape(pattern), vim.fn.shellescape(base_dir))
       local p_handle = io.popen(fd_cmd)
@@ -910,12 +963,13 @@ function _G.OpenFolderPicker(target_dir)
             seen[line] = true
             local is_d = vim.fn.isdirectory(line) == 1
             local rel = vim.fn.fnamemodify(line, ":~:.")
-            if is_d then
-              if not rel:match("/$") then rel = rel .. "/" end
-              table.insert(items, { text = rel, file = line, dir = true })
-            else
-              table.insert(items, { text = rel, file = line, dir = false })
-            end
+            if is_d and not rel:match("/$") then rel = rel .. "/" end
+            table.insert(items, {
+              text = prefix .. rel,
+              name = vim.fn.fnamemodify(line, ":t") .. (is_d and "/" or ""),
+              file = line,
+              dir = is_d,
+            })
           end
         end
         p_handle:close()
@@ -931,7 +985,8 @@ function _G.OpenFolderPicker(target_dir)
     if not path:match("/$") then path = path .. "/" end
     local rel = vim.fn.fnamemodify(path, ":~:.")
     if not rel:match("/$") then rel = rel .. "/" end
-    picker.input:set(rel)
+    if rel == "./" or rel == "." then rel = "" end
+    picker.input:set(rel, rel)
     picker:find({ refresh = false })
     if picker.input and picker.input.win and picker.input.win:valid() then
       picker.input.win:focus()
@@ -942,51 +997,49 @@ function _G.OpenFolderPicker(target_dir)
   snacks.picker({
     title = "Open Project / Folder / File (Tab/Right to browse, Enter to open)",
     live = true,
-    format = "file",
+    format = function(item, picker)
+      if item.is_parent then
+        return {
+          { "󰉍 ", "Special" },
+          { item.name or item.text, "Comment" },
+        }
+      end
+      local icon = item.dir and "󰉋 " or "󰈙 "
+      local hl = item.dir and "Directory" or "Normal"
+      return {
+        { icon, hl },
+        { item.name or item.text, hl },
+      }
+    end,
     finder = function(opts, ctx)
-      local raw_query = ctx.filter and ctx.filter.search or ""
-      local q = vim.trim(raw_query)
-
-      if q:sub(1, 1) == "~" then
-        q = home .. q:sub(2)
-      end
-
-      local base_dir = nil
-      local pattern = ""
-
-      if q == "" then
-        base_dir = vim.fn.getcwd()
-        pattern = ""
-      elseif vim.fn.isdirectory(q) == 1 and q:match("/$") then
-        base_dir = vim.fn.fnamemodify(q, ":p"):gsub("/+$", "")
-        pattern = ""
-      elseif q:match("/") then
-        local parent = vim.fn.fnamemodify(q, ":h")
-        local leaf = vim.fn.fnamemodify(q, ":t")
-        if vim.fn.isdirectory(parent) == 1 then
-          base_dir = vim.fn.fnamemodify(parent, ":p"):gsub("/+$", "")
-          pattern = leaf:lower()
-        else
-          base_dir = vim.fn.getcwd()
-          pattern = q:lower()
+      local raw_query = ""
+      if ctx.filter then
+        if ctx.filter.search and ctx.filter.search ~= "" then
+          raw_query = ctx.filter.search
+        elseif ctx.filter.pattern and ctx.filter.pattern ~= "" then
+          raw_query = ctx.filter.pattern
         end
-      else
-        base_dir = vim.fn.getcwd()
-        pattern = q:lower()
       end
-
-      base_dir = vim.fn.expand(base_dir)
+      if raw_query == "" and ctx.picker and ctx.picker.input then
+        pcall(function()
+          local text = ctx.picker.input:get()
+          if text and text ~= "" then raw_query = text end
+        end)
+      end
+      local base_dir, prefix, pattern = resolve_path_and_pattern(raw_query)
 
       return function(cb)
-        local items = scan_directory(base_dir, pattern)
+        local items = scan_directory(base_dir, prefix, pattern)
 
-        -- If at initial empty root, also append recent workspaces and standard project folders
-        if q == "" then
+        -- At initial root query, also append recent workspaces and standard folders
+        if vim.trim(raw_query) == "" then
           if _G.RecentWorkspaces and #_G.RecentWorkspaces > 0 then
             for _, rw in ipairs(_G.RecentWorkspaces) do
               if vim.fn.isdirectory(rw) == 1 and rw ~= base_dir then
+                local display_name = "Recent: " .. vim.fn.fnamemodify(rw, ":~") .. "/"
                 table.insert(items, {
-                  text = "Recent: " .. vim.fn.fnamemodify(rw, ":~") .. "/",
+                  text = vim.fn.fnamemodify(rw, ":~:.") .. "/",
+                  name = display_name,
                   file = rw,
                   dir = true,
                 })
@@ -997,8 +1050,10 @@ function _G.OpenFolderPicker(target_dir)
           local common = { home .. "/Projects", home .. "/Documents", home .. "/Desktop", home .. "/Downloads" }
           for _, c in ipairs(common) do
             if vim.fn.isdirectory(c) == 1 and c ~= base_dir then
+              local display_name = vim.fn.fnamemodify(c, ":~") .. "/"
               table.insert(items, {
-                text = vim.fn.fnamemodify(c, ":~") .. "/",
+                text = vim.fn.fnamemodify(c, ":~:.") .. "/",
+                name = display_name,
                 file = c,
                 dir = true,
               })
@@ -1047,7 +1102,7 @@ function _G.OpenFolderPicker(target_dir)
         if item and (item.dir or item.is_parent or (item.file and vim.fn.isdirectory(item.file) == 1)) then
           drill_into(picker, item.file)
         elseif item and item.file then
-          picker.input:set(item.file)
+          picker.input:set(item.file, item.file)
           picker:find({ refresh = false })
         end
       end,
@@ -1060,9 +1115,10 @@ function _G.OpenFolderPicker(target_dir)
             if not parent:match("/$") then parent = parent .. "/" end
             local rel = vim.fn.fnamemodify(parent, ":~:.")
             if not rel:match("/$") then rel = rel .. "/" end
-            picker.input:set(rel)
+            if rel == "./" or rel == "." then rel = "" end
+            picker.input:set(rel, rel)
           else
-            picker.input:set("")
+            picker.input:set("", "")
           end
           picker:find({ refresh = false })
         end

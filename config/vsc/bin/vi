@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# ===================================================================
+# Minimal Code Editor - Terminal Client Wrapper (vi)
+# ===================================================================
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$DIR/nvim" "$@"

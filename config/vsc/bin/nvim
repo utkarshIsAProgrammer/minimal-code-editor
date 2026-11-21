@@ -5,33 +5,38 @@
 # files in the active parent editor instance.
 # ===================================================================
 
-if [ -n "$NVIM" ]; then
-    REAL_NVIM=$(which -a nvim 2>/dev/null | grep -v "/\.config/vsc/bin" | grep -v "/config/vsc/bin" | head -n 1)
-    if [ -z "$REAL_NVIM" ]; then
-        REAL_NVIM="nvim"
-    fi
+NVIM_CLI=""
+if [ -x "/usr/bin/nvim" ]; then
+    NVIM_CLI="/usr/bin/nvim"
+elif [ -x "/opt/homebrew/bin/nvim" ]; then
+    NVIM_CLI="/opt/homebrew/bin/nvim"
+elif [ -x "/usr/local/bin/nvim" ]; then
+    NVIM_CLI="/usr/local/bin/nvim"
+else
+    NVIM_CLI="nvim"
+fi
 
+if [ -n "$NVIM" ]; then
     if [ $# -eq 0 ]; then
-        "$REAL_NVIM" --server "$NVIM" --remote-send "<Esc>:lua _G.FocusEditorFromTerminal()<CR>" >/dev/null 2>&1
+        "$NVIM_CLI" --server "$NVIM" --remote-expr "v:lua._G.FocusEditorFromTerminal()" >/dev/null 2>&1
         exit 0
     fi
 
     for arg in "$@"; do
         case "$arg" in
             -h|--help|-v|--version)
-                exec "$REAL_NVIM" "$arg"
+                exec "$NVIM_CLI" "$arg"
                 ;;
             -*)
                 ;;
             *)
                 FULL_PATH="$(realpath "$arg" 2>/dev/null || readlink -f "$arg" 2>/dev/null || echo "$PWD/$arg")"
                 ESCAPED="${FULL_PATH//\'/\\\'}"
-                "$REAL_NVIM" --server "$NVIM" --remote-send "<Esc>:lua _G.OpenFileFromTerminal('$ESCAPED')<CR>" >/dev/null 2>&1
+                "$NVIM_CLI" --server "$NVIM" --remote-expr "v:lua._G.OpenFileFromTerminal('$ESCAPED')" >/dev/null 2>&1
                 ;;
         esac
     done
     exit 0
 fi
 
-REAL_NVIM=$(which -a nvim 2>/dev/null | grep -v "/\.config/vsc/bin" | grep -v "/config/vsc/bin" | head -n 1)
-exec "$REAL_NVIM" "$@"
+exec "$NVIM_CLI" "$@"
