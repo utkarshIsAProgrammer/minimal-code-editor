@@ -15,9 +15,18 @@ local map = vim.keymap.set
 -- 1. Modeless Typing: Auto-Enter Insert Mode in Editable Documents
 -- -------------------------------------------------------------------
 _G.skip_insert_autocmd = false
+_G.user_normal_mode = false
+
+vim.api.nvim_create_autocmd("InsertEnter", {
+  callback = function()
+    _G.user_normal_mode = false
+  end,
+  desc = "Track user entering write mode",
+})
+
 vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
   callback = function(args)
-    if _G.skip_insert_autocmd then return end
+    if _G.skip_insert_autocmd or _G.user_normal_mode then return end
     local buf = args.buf
     if not (vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == "" and vim.bo[buf].modifiable) then
       return
@@ -36,6 +45,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       end
     end
     vim.schedule(function()
+      if _G.skip_insert_autocmd or _G.user_normal_mode then return end
       if vim.api.nvim_buf_is_valid(buf)
         and vim.bo[buf].buftype == ""
         and vim.bo[buf].modifiable
@@ -107,6 +117,7 @@ end, { expr = true, silent = true })
 -- -------------------------------------------------------------------
 local function handle_escape()
   -- Prevent autocommands from forcing insert mode back on
+  _G.user_normal_mode = true
   _G.skip_insert_autocmd = true
   vim.defer_fn(function() _G.skip_insert_autocmd = false end, 300)
 
@@ -117,10 +128,30 @@ local function handle_escape()
     pcall(_G.close_mouse_hover)
   end
 
-  -- Close code suggestion popup (blink.cmp) or native popup
+  -- Close code suggestion popup (blink.cmp) or native popup immediately & synchronously
   local ok_blink, blink = pcall(require, "blink.cmp")
-  if ok_blink and blink.is_visible and blink.is_visible() then
+  if ok_blink then
     pcall(blink.cancel)
+    pcall(blink.hide)
+    pcall(function()
+      local trigger = require("blink.cmp.completion.trigger")
+      if trigger and trigger.hide then trigger.hide() end
+    end)
+    pcall(function()
+      local menu = require("blink.cmp.completion.windows.menu")
+      if menu then
+        if menu.close then menu.close() end
+        if menu.win and menu.win:is_open() then menu.win:close() end
+      end
+      local docs = require("blink.cmp.completion.windows.documentation")
+      if docs and docs.win and docs.win:is_open() then
+        docs.win:close()
+      end
+      local sig = require("blink.cmp.signature.window")
+      if sig and sig.win and sig.win:is_open() then
+        sig.win:close()
+      end
+    end)
   end
 
   if vim.fn.pumvisible() == 1 then
@@ -175,6 +206,16 @@ local function handle_escape()
     return
   end
 
+  -- Close any open floating windows across the tabpage (problem details, hover docs, popups)
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if win ~= cur_win and vim.api.nvim_win_is_valid(win) then
+      local cfg = vim.api.nvim_win_get_config(win)
+      if cfg.relative ~= "" then
+        pcall(vim.api.nvim_win_close, win, true)
+      end
+    end
+  end
+
   -- In regular editing buffer: enter genuine Normal mode synchronously so : never leaks into file
   local m = vim.fn.mode()
   if m == "s" or m == "x" or m == "v" or m == "V" or m == "\22" then
@@ -182,10 +223,16 @@ local function handle_escape()
   end
   vim.cmd("stopinsert")
   vim.cmd("nohlsearch")
-  vim.api.nvim_echo({ { "󰅪 NORMAL", "ModeMsg" }, { " • Press 'i' to edit", "Comment" } }, false, {})
+  vim.schedule(function()
+    if vim.fn.mode() == "n" then
+      vim.api.nvim_echo({ { "󰅪 NORMAL", "ModeMsg" }, { " • Press 'i' to edit", "Comment" } }, false, {})
+    end
+  end)
 end
 
 map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { desc = "Enter Normal Mode / Close Menus (Esc)" })
+map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { desc = "Enter Normal Mode / Close Menus (Shift+Esc)" })
+_G.handle_escape = handle_escape
 
 
 -- -------------------------------------------------------------------
@@ -671,7 +718,7 @@ vim.api.nvim_create_autocmd({ "BufLeave", "VimLeavePre" }, {
 })
 
 map({ "n", "i" }, "<C-n>", "<cmd>enew<cr><cmd>startinsert<cr>", { desc = "New File (VS Code Ctrl+N)" })
-map({ "n", "i" }, "<C-w>", close_current_buffer, { desc = "Close Editor Tab (VS Code Ctrl+W)" })
+map("n", "<C-w>", close_current_buffer, { desc = "Close Editor Tab (VS Code Ctrl+W)" })
 map({ "n", "i" }, "<C-F4>", close_current_buffer, { desc = "Close Editor Tab (Ctrl+F4)" })
 map({ "n", "i" }, "<C-S-w>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
 map({ "n", "i" }, "<C-S-W>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
@@ -1260,8 +1307,6 @@ end
 map({ "n", "i", "x", "s" }, "<S-Del>", delete_current_line, { desc = "Delete Line (Shift+Delete)" })
 map({ "n", "i", "x", "s" }, "<S-Delete>", delete_current_line, { desc = "Delete Line (Shift+Delete)" })
 map({ "n", "i", "x", "s" }, "<S-kDel>", delete_current_line, { desc = "Delete Line (Shift+Delete)" })
-map({ "n", "i", "x", "s" }, "\27[3;2~", delete_current_line, { desc = "Delete Line (Shift+Delete)" })
-map({ "n", "i", "x", "s" }, "\27[3;2u", delete_current_line, { desc = "Delete Line (Shift+Delete)" })
 
 map({ "n", "i", "x", "s" }, "<C-S-k>", function()
   vim.cmd('normal! "_dd')
@@ -1338,14 +1383,22 @@ local function delete_word_right()
 end
 
 -- Delete Word Left (Ctrl+Backspace / Alt+Backspace)
-map({ "i", "n", "x" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
-map({ "i", "n", "x" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
+map("i", "<C-BS>", "<C-w>", { remap = false, desc = "Delete Word Left (Ctrl+Backspace)" })
+map("i", "<M-BS>", "<C-w>", { remap = false, desc = "Delete Word Left (Alt+Backspace)" })
+map({ "n", "x" }, "<C-BS>", "db", { remap = false, desc = "Delete Word Left (Ctrl+Backspace)" })
+map({ "n", "x" }, "<M-BS>", "db", { remap = false, desc = "Delete Word Left (Alt+Backspace)" })
 
 -- Delete Word Right (Ctrl+Delete / Alt+Delete)
-map({ "i", "n", "x" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
-map({ "i", "n", "x" }, "<C-Delete>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
-map({ "i", "n", "x" }, "<M-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
-map({ "i", "n", "x" }, "<M-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
+map("i", "<C-Del>", "<C-o>de", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
+map("i", "<C-Delete>", "<C-o>de", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
+map("i", "<M-Del>", "<C-o>de", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
+map("i", "<M-Delete>", "<C-o>de", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
+map("i", "<M-d>", "<C-o>de", { remap = false, desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
+map({ "n", "x" }, "<C-Del>", "dw", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
+map({ "n", "x" }, "<C-Delete>", "dw", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
+map({ "n", "x" }, "<M-Del>", "dw", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
+map({ "n", "x" }, "<M-Delete>", "dw", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
+map({ "n", "x" }, "<M-d>", "dw", { remap = false, desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
 
 -- -------------------------------------------------------------------
 -- 13. Line Manipulation (Alt+Up/Down, Shift+Alt+Down, Enter lines)
@@ -1394,18 +1447,12 @@ map({ "n", "i" }, "<M-S-Up>", "<cmd>t -1<cr>", { desc = "Copy Line Up (VS Code S
 map({ "n", "i" }, "<A-S-Up>", "<cmd>t -1<cr>", { desc = "Copy Line Up (VS Code Shift+Alt+Up)" })
 map("x", "<M-S-Up>", ":t '<-1<cr>gv", { desc = "Copy Selection Up (VS Code Shift+Alt+Up)" })
 map("x", "<A-S-Up>", ":t '<-1<cr>gv", { desc = "Copy Selection Up (VS Code Shift+Alt+Up)" })
-map({ "n", "i" }, "\27[1;4A", "<cmd>t -1<cr>", { desc = "Copy Line Up (Shift+Alt+Up)" })
-map({ "n", "i" }, "\27[1;6A", "<cmd>t -1<cr>", { desc = "Copy Line Up (Shift+Alt+Up)" })
-map({ "n", "i" }, "\27[1;10A", "<cmd>t -1<cr>", { desc = "Copy Line Up (Shift+Alt+Up)" })
 
 -- Shift+Alt+Down: Duplicate Line Down (VS Code Shift+Alt+Down)
 map({ "n", "i" }, "<M-S-Down>", "<cmd>t.<cr>", { desc = "Duplicate Line Down (VS Code Shift+Alt+Down)" })
 map({ "n", "i" }, "<A-S-Down>", "<cmd>t.<cr>", { desc = "Duplicate Line Down (VS Code Shift+Alt+Down)" })
 map("x", "<M-S-Down>", ":t '><cr>gv", { desc = "Duplicate Selection Down (VS Code Shift+Alt+Down)" })
 map("x", "<A-S-Down>", ":t '><cr>gv", { desc = "Duplicate Selection Down (VS Code Shift+Alt+Down)" })
-map({ "n", "i" }, "\27[1;4B", "<cmd>t.<cr>", { desc = "Duplicate Line Down (Shift+Alt+Down)" })
-map({ "n", "i" }, "\27[1;6B", "<cmd>t.<cr>", { desc = "Duplicate Line Down (Shift+Alt+Down)" })
-map({ "n", "i" }, "\27[1;10B", "<cmd>t.<cr>", { desc = "Duplicate Line Down (Shift+Alt+Down)" })
 
 map({ "n", "i" }, "<C-CR>", "<Esc>o", { desc = "Insert Line Below (Ctrl+Enter)" })
 map({ "n", "i" }, "<C-S-CR>", "<Esc>O", { desc = "Insert Line Above (Ctrl+Shift+Enter)" })

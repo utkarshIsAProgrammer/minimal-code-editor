@@ -19,8 +19,14 @@ opt.titlestring = "Minimal - %t"
 opt.updatetime = 300       -- Fast 300ms response for cursor hold, diagnostics & hover
 opt.mousemoveevent = false  -- Disable mouse movement tracking to prevent floating window clipping
 
--- Programmer Font: CaskaydiaCove Nerd Font Mono (Cascadia Code with programming ligatures for nerds & geeks)
-opt.guifont = "CaskaydiaCove Nerd Font Mono,BlexMono Nerd Font Mono,JetBrainsMono Nerd Font Mono:h11.5"
+-- Fast key timeout: Esc responds instantly without modal waiting/lag
+opt.timeout = true
+opt.timeoutlen = 300
+opt.ttimeout = true
+opt.ttimeoutlen = 10
+
+-- Programmer Font: CaskaydiaCove Nerd Font Mono with universal fallbacks
+opt.guifont = "CaskaydiaCove Nerd Font Mono,JetBrainsMono Nerd Font,Cascadia Code,Consolas,Courier New:h11.5"
 
 -- Cursor: Solid/blinking block in Normal/Visual/Command, thin blinking bar in Insert
 opt.guicursor = "n-c-sm:block-blinkon500-blinkoff500,i-ci-ve:ver25-blinkon500-blinkoff500,v:block,r-cr:hor20-blinkon500-blinkoff500"

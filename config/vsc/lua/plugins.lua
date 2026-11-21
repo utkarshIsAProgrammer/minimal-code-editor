@@ -518,16 +518,18 @@ return {
       "rafamadriz/friendly-snippets",
     },
     opts = {
+      enabled = function()
+        return vim.api.nvim_get_mode().mode:match("^[is]") ~= nil and not _G.user_normal_mode
+      end,
       keymap = {
         preset = "super-tab",
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = {
           function(cmp)
-            if cmp.is_visible() then
-              cmp.cancel()
+            if _G.handle_escape then
+              _G.handle_escape()
+              return true
             end
-            vim.cmd("stopinsert")
-            return true
           end,
           "fallback",
         },

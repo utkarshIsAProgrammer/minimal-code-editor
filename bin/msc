@@ -64,8 +64,8 @@ if [ -n "$NVIM" ]; then
     exit 0
 fi
 
-# Launch in Kitty if available and not already inside a Kitty window
-if [ -n "$KITTY_BIN" ] && [ -z "$KITTY_WINDOW_ID" ] && [ -t 0 ]; then
+# Launch in Kitty if available
+if [ -n "$KITTY_BIN" ]; then
     if [ -f "$KITTY_CONF" ]; then
         exec "$KITTY_BIN" --config "$KITTY_CONF" --class vsc -T "Minimal" -- "$NVIM_BIN" "$@"
     else
