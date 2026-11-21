@@ -2686,6 +2686,22 @@ vim.api.nvim_create_user_command("ColorTheme", function() _G.SelectThemePicker()
 vim.api.nvim_create_user_command("SelectTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
 vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between Dark Magic, Cyber Aurora, and Medieval Scriptorium" })
 
+-- Indent Rainbow Guides Command
+function _G.ToggleIndentRainbow()
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.indent then
+    if snacks.indent.enabled then
+      snacks.indent.disable()
+      vim.notify("Indent Rainbow Guides: Disabled", vim.log.levels.INFO, { title = "Minimal Editor" })
+    else
+      snacks.indent.enable()
+      vim.notify("Indent Rainbow Guides: Enabled", vim.log.levels.INFO, { title = "Minimal Editor" })
+    end
+  end
+end
+vim.api.nvim_create_user_command("IndentRainbow", _G.ToggleIndentRainbow, { desc = "Toggle Indent Rainbow Guides" })
+vim.api.nvim_create_user_command("IndentToggle", _G.ToggleIndentRainbow, { desc = "Toggle Indent Rainbow Guides" })
+
 -- -------------------------------------------------------------------
 -- 24. Native macOS Command Key (Cmd / ⌘) Support
 -- -------------------------------------------------------------------
