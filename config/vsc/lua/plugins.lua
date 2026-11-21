@@ -696,7 +696,7 @@ return {
       function _G.ToggleLineComment(mode)
         ensure_commentstring()
         if mode == "x" or mode == "s" then
-          vim.cmd("normal! \27")
+          vim.cmd("normal! \x1b")
           local s_line = vim.fn.getpos("'<")[2]
           local e_line = vim.fn.getpos("'>")[2]
           if s_line > e_line then s_line, e_line = e_line, s_line end
@@ -739,7 +739,7 @@ return {
         local s_line = vim.fn.line(".")
         local e_line = s_line
         if mode == "x" or mode == "s" then
-          vim.cmd("normal! \27")
+          vim.cmd("normal! \x1b")
           s_line = vim.fn.getpos("'<")[2]
           e_line = vim.fn.getpos("'>")[2]
           if s_line > e_line then s_line, e_line = e_line, s_line end

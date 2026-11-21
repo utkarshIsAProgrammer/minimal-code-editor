@@ -26,11 +26,14 @@ local function ensure_insert_mode(buf)
   if ft == "snacks_dashboard" or ft:find("dashboard") or ft:find("picker") or ft:find("snacks") then
     return
   end
-  local name = vim.api.nvim_buf_get_name(buf)
-  if vim.fn.argc() == 0 and (name == "" or name == nil) and vim.api.nvim_buf_line_count(buf) <= 1 then
-    local lines = vim.api.nvim_buf_get_lines(buf, 0, 1, false)
-    if #lines == 0 or lines[1] == "" then
-      return
+  -- Only suppress insert mode on initial startup before VimEnter when opening Snacks dashboard
+  if vim.v.vim_did_enter == 0 and vim.fn.argc() == 0 then
+    local name = vim.api.nvim_buf_get_name(buf)
+    if (name == "" or name == nil) and vim.api.nvim_buf_line_count(buf) <= 1 then
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, 1, false)
+      if #lines == 0 or lines[1] == "" then
+        return
+      end
     end
   end
   vim.schedule(function()
@@ -45,12 +48,49 @@ local function ensure_insert_mode(buf)
   end)
 end
 
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "InsertLeave", "FocusGained" }, {
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "InsertLeave", "FocusGained", "VimEnter", "ModeChanged" }, {
   callback = function(args)
+    if args.event == "ModeChanged" and not args.match:find(":n") then
+      return
+    end
     ensure_insert_mode(args.buf)
   end,
   desc = "Maintain 100% Modeless Typing in all editable documents",
 })
+
+-- -------------------------------------------------------------------
+-- 1b. Neutralize Normal Mode: Typing & Clicking in Editable Buffers
+-- Any keystroke in an editable document types the character and ensures
+-- Insert mode. Zero Vim modal commands can execute in document buffers.
+-- -------------------------------------------------------------------
+map("n", "<LeftMouse>", "<LeftMouse><cmd>startinsert<cr>", { desc = "Click to focus and type (Modeless)" })
+
+local function bind_normal_mode_typing()
+  for code = 32, 126 do
+    local char = string.char(code)
+    local key_repr = char
+    if char == " " then
+      key_repr = "<Space>"
+    elseif char == "|" then
+      key_repr = "<Bar>"
+    elseif char == "\\" then
+      key_repr = "<Bslash>"
+    end
+    map("n", key_repr, function()
+      local cur_buf = vim.api.nvim_get_current_buf()
+      if vim.bo[cur_buf].buftype == ""
+        and vim.bo[cur_buf].modifiable
+        and vim.bo[cur_buf].filetype ~= "snacks_dashboard"
+        and not vim.bo[cur_buf].filetype:find("picker")
+        and not vim.bo[cur_buf].filetype:find("explorer")
+      then
+        return "i" .. char
+      end
+      return char
+    end, { expr = true, silent = true, desc = "Type " .. char .. " (100% Modeless)" })
+  end
+end
+bind_normal_mode_typing()
 
 -- -------------------------------------------------------------------
 -- 2. Modeless Entry: Files start in Insert mode; Esc switches to Normal mode
@@ -202,7 +242,7 @@ local function handle_escape()
   -- If in selection mode (visual/select), cancel selection and stay in typing mode
   local m = vim.fn.mode()
   if m == "s" or m == "x" or m == "v" or m == "V" or m == "\22" then
-    vim.cmd("normal! \27")
+    vim.cmd("normal! \x1b")
     vim.cmd("startinsert")
     return
   end
@@ -211,8 +251,8 @@ local function handle_escape()
   vim.cmd("startinsert")
 end
 
-map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { nowait = true, desc = "Close Menus & Popups (100% Modeless Esc)" })
-map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { nowait = true, desc = "Close Menus & Popups (100% Modeless Shift+Esc)" })
+map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { desc = "Close Menus & Popups (100% Modeless Esc)" })
+map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { desc = "Close Menus & Popups (100% Modeless Shift+Esc)" })
 _G.handle_escape = handle_escape
 
 
@@ -220,7 +260,7 @@ _G.handle_escape = handle_escape
 -- 4. Modeless Clipboard Operations (Ctrl+C, Ctrl+V, Ctrl+X)
 -- -------------------------------------------------------------------
 local function copy_selection()
-  vim.cmd('normal! \27gv"+y')
+  vim.cmd('normal! \x1bgv"+y')
   local content = vim.fn.getreg('+')
   vim.fn.setreg('*', content)
   vim.fn.setreg('"', content)
@@ -238,7 +278,7 @@ local function copy_line()
 end
 
 local function cut_selection()
-  vim.cmd('normal! \27gv"+d')
+  vim.cmd('normal! \x1bgv"+d')
   local content = vim.fn.getreg('+')
   vim.fn.setreg('*', content)
   vim.fn.setreg('"', content)
@@ -255,13 +295,13 @@ local function cut_line_insert()
 end
 
 local function paste_selection()
-  vim.cmd('normal! \27gv"_d')
+  vim.cmd('normal! \x1bgv"_d')
   vim.cmd('startinsert')
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-r><C-o>+', true, false, true), 'n', false)
 end
 
 local function delete_selection()
-  vim.cmd('normal! \27gv"_d')
+  vim.cmd('normal! \x1bgv"_d')
   vim.cmd('startinsert')
 end
 
@@ -371,7 +411,7 @@ local function wrap_selection(left, right)
   return function()
     local reg_save = vim.fn.getreg('"')
     local regtype_save = vim.fn.getregtype('"')
-    vim.cmd('normal! \27gv""y')
+    vim.cmd('normal! \x1bgv""y')
     local text = vim.fn.getreg('"')
     if not text or text == "" then
       vim.fn.setreg('"', reg_save, regtype_save)
@@ -747,13 +787,13 @@ function _G.FocusEditorFromTerminal()
       end
     end
   end)
-  vim.cmd("stopinsert")
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
     local buf = vim.api.nvim_win_get_buf(win)
     local bt = vim.bo[buf].buftype
     local ft = vim.bo[buf].filetype
     if bt == "" and ft ~= "snacks_explorer" and not ft:find("snacks_picker") then
       vim.api.nvim_set_current_win(win)
+      vim.cmd("startinsert")
       break
     end
   end
@@ -807,8 +847,6 @@ function _G.OpenFileFromTerminal(target_path)
     end
   end)
 
-  vim.cmd("stopinsert")
-
   -- Switch focus to a regular editable window
   local target_win = nil
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -826,6 +864,7 @@ function _G.OpenFileFromTerminal(target_path)
   end
 
   vim.cmd("edit " .. vim.fn.fnameescape(full))
+  vim.cmd("startinsert")
   vim.notify("✓ Opened: " .. vim.fn.fnamemodify(full, ":t"), vim.log.levels.INFO, { title = "Editor" })
   return "OK"
 end
@@ -1423,11 +1462,13 @@ end
 
 map({ "i", "n", "x", "s" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
 map({ "i", "n", "x", "s" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
-map({ "i", "n", "x", "s" }, "\27[127;5u", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace CSI u)" })
+map({ "i", "n", "x", "s" }, "<Esc>[127;5u", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace CSI u)" })
+map({ "i", "n", "x", "s" }, "\x1b[127;5u", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace CSI u raw)" })
 
 map({ "i", "n", "x", "s" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
 map({ "i", "n", "x", "s" }, "<C-Delete>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
-map({ "i", "n", "x", "s" }, "\27[3;5~", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete CSI u)" })
+map({ "i", "n", "x", "s" }, "<Esc>[3;5~", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete CSI u)" })
+map({ "i", "n", "x", "s" }, "\x1b[3;5~", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete CSI u raw)" })
 map({ "i", "n", "x", "s" }, "<M-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-d>", delete_word_right, { desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
@@ -1508,20 +1549,28 @@ end
 
 map({ "n", "i" }, "<C-CR>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
 map({ "n", "i" }, "<C-Enter>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
-map({ "n", "i" }, "\27[13;5u", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter CSI u)" })
+map({ "n", "i" }, "<Esc>[13;5u", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter CSI u)" })
+map({ "n", "i" }, "\x1b[13;5u", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter CSI u raw)" })
+map({ "n", "i" }, "<M-o>", insert_line_below, { desc = "Insert Line Below (Alt+o)" })
+map({ "n", "i" }, "<A-o>", insert_line_below, { desc = "Insert Line Below (Alt+o)" })
 
 map({ "n", "i" }, "<C-S-CR>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
 map({ "n", "i" }, "<C-S-Enter>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
-map({ "n", "i" }, "\27[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u)" })
+map({ "n", "i" }, "<Esc>[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u)" })
+map({ "n", "i" }, "\x1b[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u raw)" })
 map({ "n", "i" }, "<M-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
 map({ "n", "i" }, "<A-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
+map({ "n", "i" }, "<M-S-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+Enter)" })
+map({ "n", "i" }, "<A-S-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+Enter)" })
+map({ "n", "i" }, "<M-O>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+O)" })
+map({ "n", "i" }, "<A-O>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+O)" })
 
 map({ "x", "s" }, "<Tab>", function()
-  vim.cmd("normal! \27gv>gv")
+  vim.cmd("normal! \x1bgv>gv")
 end, { desc = "Indent Selection (Tab)" })
 
 map({ "x", "s" }, "<S-Tab>", function()
-  vim.cmd("normal! \27gv<gv")
+  vim.cmd("normal! \x1bgv<gv")
 end, { desc = "Unindent Selection (Shift+Tab)" })
 
 -- -------------------------------------------------------------------
@@ -1638,6 +1687,11 @@ map("i", "<C-S-Right>", function() select_word_right("i") end, { desc = "Select 
 map("i", "<C-S-Left>", function() select_word_left("i") end, { desc = "Select Word Left (Ctrl+Shift+Left)" })
 map({ "x", "s" }, "<C-S-Right>", function() select_word_right("x") end, { desc = "Select Word Right (Ctrl+Shift+Right)" })
 map({ "x", "s" }, "<C-S-Left>", function() select_word_left("x") end, { desc = "Select Word Left (Ctrl+Shift+Left)" })
+
+map("s", "<Left>", "<Esc><cmd>startinsert<cr><Left>", { desc = "Deselect Left (Modeless)" })
+map("s", "<Right>", "<Esc><cmd>startinsert<cr><Right>", { desc = "Deselect Right (Modeless)" })
+map("s", "<Up>", "<Esc><cmd>startinsert<cr><Up>", { desc = "Deselect Up (Modeless)" })
+map("s", "<Down>", "<Esc><cmd>startinsert<cr><Down>", { desc = "Deselect Down (Modeless)" })
 
 map({ "n", "x" }, "<Home>", "^", { desc = "Start of Line Text" })
 map("s", "<Home>", "<Esc><cmd>startinsert<cr><C-o>^", { desc = "Start of Line Text" })
@@ -1825,7 +1879,7 @@ function _G.ReplaceInFile()
   local default_search = ""
   local mode = vim.fn.mode()
   if mode == "v" or mode == "V" or mode == "x" or mode == "\22" then
-    vim.cmd('normal! \27gv"+y')
+    vim.cmd('normal! \x1bgv"+y')
     default_search = vim.fn.getreg('+')
   else
     default_search = vim.fn.expand("<cword>")
@@ -2495,9 +2549,7 @@ local function unified_quick_fix()
   end
 end
 
--- Quick Fix / Solutions (Alt+Enter & Ctrl+.)
-map({ "n", "i" }, "<M-CR>", unified_quick_fix, { desc = "Quick Fix / Solutions (Alt+Enter)" })
-map({ "n", "i" }, "<A-CR>", unified_quick_fix, { desc = "Quick Fix / Solutions (Alt+Enter)" })
+-- Quick Fix / Solutions (Ctrl+.)
 map({ "n", "i" }, "<C-.>", unified_quick_fix, { desc = "Quick Fix / Solutions (Ctrl+.)" })
 
 -- Hover Symbol / Problem Details (Ctrl+K Ctrl+I, gh, Alt+H)
