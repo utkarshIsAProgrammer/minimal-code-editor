@@ -78,16 +78,24 @@ function M.toggle()
   M.set_theme(next_theme, true)
 end
 
--- Interactive theme picker with live preview
+-- Interactive theme picker with active selection tracking
 function M.picker()
+  local current_theme = vim.g.colors_name or M.get_current_theme()
+  local active_idx = 1
   local items = {}
-  for _, t in ipairs(M.themes) do
+
+  for idx, t in ipairs(M.themes) do
+    local is_active = (t.name == current_theme)
+    if is_active then
+      active_idx = idx
+    end
     table.insert(items, {
-      text = t.icon .. t.label .. "  -  " .. t.desc,
+      text = t.icon .. t.label .. (is_active and "  [Active]" or "") .. "  -  " .. t.desc,
       name = t.name,
       label = t.label,
       desc = t.desc,
       icon = t.icon,
+      is_active = is_active,
     })
   end
 
@@ -97,11 +105,27 @@ function M.picker()
       title = "🎨 Color Themes",
       items = items,
       format = function(item)
-        return {
-          { item.icon or " ", "Special" },
-          { item.label .. "  ", "Bold" },
-          { "(" .. item.desc .. ")", "Comment" },
-        }
+        if item.is_active then
+          return {
+            { item.icon or " ", "Special" },
+            { item.label .. "  ", "Bold" },
+            { "✓ Active  ", "DiagnosticOk" },
+            { "(" .. item.desc .. ")", "Comment" },
+          }
+        else
+          return {
+            { item.icon or " ", "Special" },
+            { item.label .. "  ", "Normal" },
+            { "          ", "Normal" },
+            { "(" .. item.desc .. ")", "Comment" },
+          }
+        end
+      end,
+      on_show = function(picker)
+        if active_idx and active_idx > 1 then
+          picker.list:set_target(active_idx)
+          picker.list:view(active_idx, 1, true)
+        end
       end,
       confirm = function(picker, item)
         picker:close()
@@ -113,9 +137,10 @@ function M.picker()
   else
     local options = {}
     for _, t in ipairs(M.themes) do
-      table.insert(options, t.icon .. t.label .. " (" .. t.desc .. ")")
+      local tag = (t.name == current_theme) and " [Active ✓]" or ""
+      table.insert(options, t.icon .. t.label .. tag .. " (" .. t.desc .. ")")
     end
-    vim.ui.select(options, { prompt = "🎨 Select Color Theme: " }, function(choice, idx)
+    vim.ui.select(options, { prompt = "🎨 Select Color Theme: ", default = options[active_idx] }, function(choice, idx)
       if idx and M.themes[idx] then
         M.set_theme(M.themes[idx].name, true)
       end
