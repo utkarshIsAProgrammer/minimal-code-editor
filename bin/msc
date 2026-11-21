@@ -6,6 +6,13 @@ set -e
 
 export NVIM_APPNAME="vsc"
 
+# Self-updater: minimal update / minimal --update
+if [ "$1" = "update" ] || [ "$1" = "--update" ]; then
+    echo "⚡ Updating Minimal Code Editor to the latest version..."
+    curl -fsSL https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.sh | bash
+    exit 0
+fi
+
 # Locate Neovim binary across standard Unix / macOS paths
 NVIM_BIN=""
 if command -v nvim >/dev/null 2>&1; then

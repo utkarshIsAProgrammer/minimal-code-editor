@@ -2,6 +2,10 @@
 setlocal
 set "NVIM_APPNAME=vsc"
 
+:: Self-updater: minimal update / minimal --update
+if /I "%~1"=="update" goto :self_update
+if /I "%~1"=="--update" goto :self_update
+
 :: 1. Search PATH first
 set "NVIM_EXE="
 where nvim.exe >nul 2>&1
@@ -22,6 +26,12 @@ echo If Neovim is already installed, please add its bin folder to your Windows P
 echo.
 pause
 exit /b 1
+
+:self_update
+echo.
+echo [Minimal] Updating to the latest version from GitHub...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.ps1 | iex"
+exit /b %ERRORLEVEL%
 
 :run
 title Minimal
