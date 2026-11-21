@@ -514,7 +514,16 @@ return {
       keymap = {
         preset = "super-tab",
         ["<CR>"] = { "accept", "fallback" },
-        ["<Esc>"] = { "cancel", "fallback" },
+        ["<Esc>"] = {
+          function(cmp)
+            if cmp.is_visible() then
+              cmp.cancel()
+            end
+            vim.cmd("stopinsert")
+            return true
+          end,
+          "fallback",
+        },
         ["<C-e>"] = { "cancel", "fallback" },
       },
       completion = {
@@ -787,12 +796,6 @@ return {
         map("s", key, function() _G.ToggleLineComment("s") end, { desc = "Toggle Line Comment (Ctrl+/)" })
       end
 
-      -- VS Code chord aliases (Ctrl+K Ctrl+C)
-      map({ "n", "i", "x", "s" }, "<C-k><C-c>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Toggle Line Comment (Ctrl+K Ctrl+C)" })
-      map({ "n", "i", "x", "s" }, "<C-k><C-C>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Toggle Line Comment (Ctrl+K Ctrl+C)" })
-      map({ "n", "i", "x", "s" }, "<C-k><C-u>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Uncomment Line (Ctrl+K Ctrl+U)" })
-      map({ "n", "i", "x", "s" }, "<C-k><C-U>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Uncomment Line (Ctrl+K Ctrl+U)" })
-
       -- 2. Block Comment Toggle (VS Code Shift+Alt+A / Option+Shift+A)
       local block_keys = { "<M-S-A>", "<M-S-a>", "<A-S-A>", "<A-S-a>", "<D-A-A>", "<D-A-a>" }
       for _, key in ipairs(block_keys) do
@@ -809,10 +812,13 @@ return {
     opts = {
       ensure_installed = {
         "bash",
+        "c",
+        "cpp",
         "lua",
         "python",
         "javascript",
         "typescript",
+        "tsx",
         "html",
         "css",
         "json",
@@ -874,15 +880,25 @@ return {
       -- Only auto-install LSPs whose runtime dependencies exist on the host system.
       -- This prevents blocking "[mason-lspconfig] failed to install..." popups on fresh machines.
       local ensure = { "lua_ls" }
-      local has_npm = (vim.fn.executable("npm") == 1) or (vim.fn.executable("node") == 1)
-      local has_go  = (vim.fn.executable("go") == 1)
+      local has_npm    = (vim.fn.executable("npm") == 1) or (vim.fn.executable("node") == 1)
+      local has_go     = (vim.fn.executable("go") == 1)
+      local has_cargo  = (vim.fn.executable("cargo") == 1) or (vim.fn.executable("rustc") == 1)
+      local has_clang  = (vim.fn.executable("clang") == 1) or (vim.fn.executable("gcc") == 1)
 
       if has_npm then
-        vim.list_extend(ensure, { "pyright", "ts_ls", "html", "cssls", "jsonls", "emmet_ls" })
+        vim.list_extend(ensure, { "pyright", "ts_ls", "html", "cssls", "jsonls", "emmet_ls", "tailwindcss", "bashls", "yamlls" })
       end
 
       if has_go then
         table.insert(ensure, "gopls")
+      end
+
+      if has_cargo then
+        table.insert(ensure, "rust_analyzer")
+      end
+
+      if has_clang then
+        table.insert(ensure, "clangd")
       end
 
       return {
@@ -932,23 +948,24 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     config = function()
       -- Attach to system-installed LSPs if available on PATH
-      local ok, lspconfig = pcall(require, "lspconfig")
-      if not ok then return end
-
       local caps = {}
       local ok_blink, blink = pcall(require, "blink.cmp")
       if ok_blink then
         caps = blink.get_lsp_capabilities()
       end
 
-      local common_servers = { "gopls", "pyright", "ts_ls", "lua_ls", "html", "cssls", "jsonls", "emmet_ls" }
-      for _, srv in ipairs(common_servers) do
-        if vim.fn.executable(srv) == 1 then
-          pcall(function()
-            if srv == "gopls" then
-              lspconfig.gopls.setup({
-                capabilities = caps,
-                settings = {
+      local common_servers = {
+        "gopls", "pyright", "ts_ls", "lua_ls", "html", "cssls", "jsonls",
+        "emmet_ls", "tailwindcss", "clangd", "rust_analyzer", "bashls", "yamlls"
+      }
+
+      if vim.lsp.config and vim.lsp.enable then
+        for _, srv in ipairs(common_servers) do
+          if vim.fn.executable(srv) == 1 then
+            pcall(function()
+              local cfg = { capabilities = caps }
+              if srv == "gopls" then
+                cfg.settings = {
                   gopls = {
                     analyses = { unusedparams = true, shadow = true },
                     staticcheck = true,
@@ -956,12 +973,37 @@ return {
                     completeUnimported = true,
                     usePlaceholders = true,
                   },
-                },
-              })
-            else
-              lspconfig[srv].setup({ capabilities = caps })
-            end
-          end)
+                }
+              end
+              vim.lsp.config[srv] = cfg
+              vim.lsp.enable(srv)
+            end)
+          end
+        end
+      else
+        local ok, lspconfig = pcall(require, "lspconfig")
+        if not ok then return end
+        for _, srv in ipairs(common_servers) do
+          if vim.fn.executable(srv) == 1 and lspconfig[srv] then
+            pcall(function()
+              if srv == "gopls" then
+                lspconfig.gopls.setup({
+                  capabilities = caps,
+                  settings = {
+                    gopls = {
+                      analyses = { unusedparams = true, shadow = true },
+                      staticcheck = true,
+                      gofumpt = true,
+                      completeUnimported = true,
+                      usePlaceholders = true,
+                    },
+                  },
+                })
+              else
+                lspconfig[srv].setup({ capabilities = caps })
+              end
+            end)
+          end
         end
       end
     end,

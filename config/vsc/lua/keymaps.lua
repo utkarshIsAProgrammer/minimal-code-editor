@@ -53,17 +53,19 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 -- 2. Modeless Entry: Files start in Insert mode; Esc switches to Normal mode
 -- -------------------------------------------------------------------
 
--- Direct :q interception on Enter: typing :q, :qa, :q!, :wq, :x and hitting Enter quits immediately!
+-- Direct :q interception on Enter: typing :q, :qa, :q!, :wq, :x, :w and hitting Enter quits/saves immediately!
 local function handle_quit_or_newline(is_insert)
   local line = vim.api.nvim_get_current_line()
   local trimmed = vim.trim(line)
-  if trimmed == ":q" or trimmed == ":qa" or trimmed == ":q!" or trimmed == ":wq" or trimmed == ":x" or trimmed == ":exit" or trimmed == ":quit" then
+  if trimmed == ":q" or trimmed == ":qa" or trimmed == ":q!" or trimmed == ":wq" or trimmed == ":x" or trimmed == ":exit" or trimmed == ":quit" or trimmed == ":w" or trimmed == ":wa" then
     vim.api.nvim_set_current_line("")
     if trimmed == ":q!" then
       vim.cmd("qa!")
     elseif trimmed == ":wq" or trimmed == ":x" then
       vim.cmd("wa")
       vim.cmd("qa")
+    elseif trimmed == ":w" or trimmed == ":wa" then
+      _G.SmartSave(false)
     else
       _G.SmartQuit()
     end
@@ -106,7 +108,7 @@ end, { expr = true, silent = true })
 local function handle_escape()
   -- Prevent autocommands from forcing insert mode back on
   _G.skip_insert_autocmd = true
-  vim.defer_fn(function() _G.skip_insert_autocmd = false end, 250)
+  vim.defer_fn(function() _G.skip_insert_autocmd = false end, 300)
 
   vim.cmd("nohlsearch")
 
@@ -117,27 +119,12 @@ local function handle_escape()
 
   -- Close code suggestion popup (blink.cmp) or native popup
   local ok_blink, blink = pcall(require, "blink.cmp")
-  if ok_blink then
-    pcall(function()
-      local menu = require("blink.cmp.completion.windows.menu")
-      local trigger = require("blink.cmp.completion.trigger")
-      local doc = require("blink.cmp.completion.windows.documentation")
-      local list = require("blink.cmp.completion.list")
-      if (blink.is_visible and blink.is_visible()) or (menu and menu.win and menu.win:is_open()) then
-        vim.schedule(function()
-          pcall(function()
-            if menu and menu.close then menu.close() end
-            if doc and doc.close then doc.close() end
-            if trigger and trigger.hide then trigger.hide() end
-            if list and list.hide then list.hide() end
-          end)
-        end)
-      end
-    end)
+  if ok_blink and blink.is_visible and blink.is_visible() then
+    pcall(blink.cancel)
   end
 
   if vim.fn.pumvisible() == 1 then
-    vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-e>", true, false, true), "n")
+    pcall(vim.fn.feedkeys, vim.api.nvim_replace_termcodes("<C-e>", true, false, true), "n")
   end
 
   -- Close Snacks picker if open
@@ -161,7 +148,6 @@ local function handle_escape()
   -- On dashboard: ensure Normal mode and keep dashboard intact
   if ft == "snacks_dashboard" or ft:find("dashboard") then
     vim.cmd("stopinsert")
-    vim.cmd("nohlsearch")
     return
   end
 
@@ -189,8 +175,12 @@ local function handle_escape()
     return
   end
 
-  -- In regular editing buffer: enter genuine Normal mode so : and Vim commands work!
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-\\><C-n>", true, false, true), "n", false)
+  -- In regular editing buffer: enter genuine Normal mode synchronously so : never leaks into file
+  local m = vim.fn.mode()
+  if m == "s" or m == "x" or m == "v" or m == "V" or m == "\22" then
+    vim.cmd("normal! \27")
+  end
+  vim.cmd("stopinsert")
 end
 
 map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { desc = "Enter Normal Mode / Close Menus (Esc)" })
@@ -543,9 +533,6 @@ function _G.GoToHomescreen()
 end
 vim.api.nvim_create_user_command("Home", _G.GoToHomescreen, { desc = "Go to Homescreen / Dashboard" })
 vim.api.nvim_create_user_command("Dashboard", _G.GoToHomescreen, { desc = "Go to Homescreen / Dashboard" })
-map({ "n", "i", "s", "x" }, "<M-h>", _G.GoToHomescreen, { desc = "Go to Homescreen (Alt+H)" })
-map({ "n", "i", "s", "x" }, "<C-S-h>", _G.GoToHomescreen, { desc = "Go to Homescreen (Ctrl+Shift+H)" })
-map({ "n", "i", "s", "x" }, "<C-S-H>", _G.GoToHomescreen, { desc = "Go to Homescreen (Ctrl+Shift+H)" })
 
 -- ===================================================================
 -- Homescreen GUI Polish & Bulletproof Controls
@@ -686,10 +673,10 @@ vim.api.nvim_create_autocmd({ "BufLeave", "VimLeavePre" }, {
 })
 
 map({ "n", "i" }, "<C-n>", "<cmd>enew<cr><cmd>startinsert<cr>", { desc = "New File (VS Code Ctrl+N)" })
+map({ "n", "i" }, "<C-w>", close_current_buffer, { desc = "Close Editor Tab (VS Code Ctrl+W)" })
 map({ "n", "i" }, "<C-F4>", close_current_buffer, { desc = "Close Editor Tab (Ctrl+F4)" })
-map({ "n", "i" }, "<M-w>", close_current_buffer, { desc = "Close Editor Tab (Alt+W)" })
-map({ "n", "i" }, "<C-S-w>", close_current_buffer, { desc = "Close Editor Tab (Ctrl+Shift+W)" })
-map({ "n", "i" }, "<C-S-W>", close_current_buffer, { desc = "Close Editor Tab (Ctrl+Shift+W)" })
+map({ "n", "i" }, "<C-S-w>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
+map({ "n", "i" }, "<C-S-W>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
 
 -- -------------------------------------------------------------------
 -- 9. Open Any Folder & Create Directory
@@ -925,13 +912,8 @@ local function focus_terminal()
   Snacks.terminal()
 end
 
-map({ "n", "i", "t", "x", "s" }, "<C-0>", focus_sidebar, { desc = "Focus Sidebar (Ctrl+0)" })
-map({ "n", "i", "t", "x", "s" }, "<M-1>", focus_sidebar, { desc = "Focus Sidebar (Alt+1)" })
-
-map({ "n", "i", "t", "x", "s" }, "<C-1>", focus_editor, { desc = "Focus Editor (Ctrl+1)" })
-map({ "n", "i", "t", "x", "s" }, "<M-2>", focus_editor, { desc = "Focus Editor (Alt+2)" })
-
-map({ "n", "i", "t", "x", "s" }, "<M-3>", focus_terminal, { desc = "Focus Terminal (Alt+3)" })
+map({ "n", "i", "t", "x", "s" }, "<C-0>", focus_sidebar, { desc = "Focus Sidebar (VS Code Ctrl+0)" })
+map({ "n", "i", "t", "x", "s" }, "<C-1>", focus_editor, { desc = "Focus Editor (VS Code Ctrl+1)" })
 
 -- -------------------------------------------------------------------
 -- 11. Tab Navigation (Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+PageDown/Up)
@@ -1040,16 +1022,15 @@ local function delete_word_right()
   vim.api.nvim_win_set_cursor(0, { row, col })
 end
 
--- Ctrl+Backspace (Kitty sends \x17 which is <C-w>, terminal CSI u sends <C-BS>)
+-- Delete Word Left (Ctrl+Backspace / Alt+Backspace)
 map({ "i", "n", "x" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
-map({ "i", "n", "x" }, "<C-w>", delete_word_left, { desc = "Delete Word Left (Kitty Ctrl+Backspace)" })
-map({ "i", "n", "x" }, "<C-h>", delete_word_left, { desc = "Delete Word Left" })
-map({ "i", "n", "x" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left" })
+map({ "i", "n", "x" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
 
--- Ctrl+Delete (Kitty sends \x1bd which is <M-d>, terminal CSI u sends <C-Del>)
-map({ "i", "n", "x" }, "<M-d>", delete_word_right, { desc = "Delete Word Right (Kitty Ctrl+Delete)" })
+-- Delete Word Right (Ctrl+Delete / Alt+Delete)
 map({ "i", "n", "x" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
 map({ "i", "n", "x" }, "<C-Delete>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
+map({ "i", "n", "x" }, "<M-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
+map({ "i", "n", "x" }, "<M-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 
 -- -------------------------------------------------------------------
 -- 13. Line Manipulation (Alt+Up/Down, Shift+Alt+Down, Enter lines)
@@ -1418,6 +1399,74 @@ vim.api.nvim_create_user_command("Line", function(opts)
   vim.cmd("GoToLine " .. (opts.args or ""))
 end, { nargs = "?", desc = "Go to Line" })
 
+-- Replace in File (VS Code Ctrl+H) & Replace in Files (VS Code Ctrl+Shift+H)
+function _G.ReplaceInFile()
+  local default_search = ""
+  local mode = vim.fn.mode()
+  if mode == "v" or mode == "V" or mode == "x" or mode == "\22" then
+    vim.cmd('normal! \27gv"+y')
+    default_search = vim.fn.getreg('+')
+  else
+    default_search = vim.fn.expand("<cword>")
+  end
+
+  vim.ui.input({
+    prompt = "🔍 Replace in File (Find): ",
+    default = default_search,
+  }, function(search)
+    if not search or search == "" then return end
+    vim.ui.input({
+      prompt = "✏️  Replace '" .. search .. "' with: ",
+      default = "",
+    }, function(replace)
+      if replace == nil then return end
+      local escaped_search = vim.fn.escape(search, "/\\")
+      local escaped_replace = vim.fn.escape(replace, "/\\&")
+      local ok, res = pcall(vim.cmd, string.format("%%s/%s/%s/g", escaped_search, escaped_replace))
+      if ok then
+        vim.notify("✓ Replaced occurrences of '" .. search .. "' with '" .. replace .. "'", vim.log.levels.INFO, { title = "Replace in File" })
+      else
+        vim.notify("Pattern not found: '" .. search .. "'", vim.log.levels.WARN, { title = "Replace in File" })
+      end
+    end)
+  end)
+end
+
+function _G.ReplaceInFiles()
+  local default_search = vim.fn.expand("<cword>")
+  vim.ui.input({
+    prompt = "🔍 Replace across Files (Find): ",
+    default = default_search,
+  }, function(search)
+    if not search or search == "" then return end
+    vim.ui.input({
+      prompt = "✏️  Replace project-wide '" .. search .. "' with: ",
+      default = "",
+    }, function(replace)
+      if replace == nil then return end
+      local escaped_search = vim.fn.escape(search, "/\\")
+      local escaped_replace = vim.fn.escape(replace, "/\\&")
+      pcall(function()
+        vim.cmd("silent! vimgrep /" .. escaped_search .. "/gj **/*")
+        local qflist = vim.fn.getqflist()
+        if #qflist == 0 then
+          vim.notify("No occurrences of '" .. search .. "' found across project", vim.log.levels.WARN, { title = "Replace in Files" })
+          return
+        end
+        vim.cmd(string.format("silent! cdo %%s/%s/%s/ge | update", escaped_search, escaped_replace))
+        vim.notify(string.format("✓ Replaced in %d location(s) across project", #qflist), vim.log.levels.INFO, { title = "Replace in Files" })
+      end)
+    end)
+  end)
+end
+
+map({ "n", "i", "x", "s" }, "<C-h>", function() _G.ReplaceInFile() end, { desc = "Replace in File (VS Code Ctrl+H)" })
+map({ "n", "i" }, "<C-S-h>", function() _G.ReplaceInFiles() end, { desc = "Replace in Files (VS Code Ctrl+Shift+H)" })
+map({ "n", "i" }, "<C-S-H>", function() _G.ReplaceInFiles() end, { desc = "Replace in Files (VS Code Ctrl+Shift+H)" })
+
+vim.api.nvim_create_user_command("Replace", function() _G.ReplaceInFile() end, { desc = "Replace in current file" })
+vim.api.nvim_create_user_command("ReplaceInFiles", function() _G.ReplaceInFiles() end, { desc = "Replace in project files" })
+
 -- -------------------------------------------------------------------
 -- 16. Edit Keybindings Directly (Ctrl+K Ctrl+S)
 -- -------------------------------------------------------------------
@@ -1513,7 +1562,6 @@ local function run_current_file()
   Snacks.terminal(cmd, { cwd = dir })
 end
 
-map({ "n", "i" }, "<C-'>", run_current_file, { desc = "Run Current File (VS Code Custom Ctrl+')" })
 map({ "n", "i" }, "<F5>", run_current_file, { desc = "Run Current File (VS Code F5)" })
 
 -- -------------------------------------------------------------------
@@ -2097,9 +2145,7 @@ local function show_hover_or_diagnostic()
   vim.lsp.buf.hover()
 end
 
-map({ "n", "i" }, "<C-k><C-i>", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (Ctrl+K Ctrl+I)" })
-map({ "n", "i" }, "<C-k><C-I>", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (Ctrl+K Ctrl+I)" })
-map({ "n", "i" }, "<M-h>", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (Alt+H)" })
+map({ "n", "i" }, "<C-k><C-i>", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (VS Code Ctrl+K Ctrl+I)" })
 map("n", "gh", show_hover_or_diagnostic, { desc = "Show Hover / Problem Details (gh)" })
 
 map({ "n", "i" }, "<F12>", function() Snacks.picker.lsp_definitions() end, { desc = "Go to Definition (F12)" })
@@ -2149,20 +2195,13 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- -------------------------------------------------------------------
--- 23. Color Themes & Theme Toggling (VS Code Ctrl+K Ctrl+T / Alt+Shift+T)
+-- 23. Color Themes & Theme Toggling (VS Code Ctrl+K Ctrl+T / F10)
 -- -------------------------------------------------------------------
 -- VS Code Standard Theme Picker: Ctrl+K Ctrl+T
 map({ "n", "i" }, "<C-k><C-t>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K Ctrl+T)" })
-map({ "n", "i" }, "<C-k>t", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K T)" })
 
--- Quick Theme Toggle: Alt+Shift+T / F10 (cycles Dark Magic -> Nerd Dark -> Cyber Aurora)
-map({ "n", "i" }, "<M-S-t>", function() _G.ToggleTheme() end, { desc = "Toggle Theme (Alt+Shift+T)" })
-map({ "n", "i" }, "<M-T>", function() _G.ToggleTheme() end, { desc = "Toggle Theme (Alt+Shift+T)" })
+-- Quick Theme Toggle: F10 (cycles Dark Magic -> Nerd Dark -> Cyber Aurora)
 map({ "n", "i" }, "<F10>", function() _G.ToggleTheme() end, { desc = "Toggle Theme (F10)" })
-
--- Theme Picker: Alt+Shift+P
-map({ "n", "i" }, "<M-S-p>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (Alt+Shift+P)" })
-map({ "n", "i" }, "<M-P>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (Alt+Shift+P)" })
 
 -- User commands
 vim.api.nvim_create_user_command("Theme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
@@ -2182,12 +2221,44 @@ map({ "n", "i" }, "<D-p>", function() Snacks.picker.files() end, { desc = "Quick
 
 -- Command Palette: Cmd+Shift+P
 map({ "n", "i" }, "<D-S-p>", function() Snacks.picker.commands() end, { desc = "Command Palette (Cmd+Shift+P)" })
-map({ "n", "i" }, "<D-P>", function() Snacks.picker.commands() end, { desc = "Command Palette (Cmd+Shift+P)" })
 
 -- Find: Cmd+F / Cmd+Shift+F
 map({ "n", "i", "x", "s" }, "<D-f>", function() Snacks.picker.lines() end, { desc = "Find in File (Cmd+F)" })
 map({ "n", "i" }, "<D-S-f>", function() Snacks.picker.grep() end, { desc = "Find in Files (Cmd+Shift+F)" })
-map({ "n", "i" }, "<D-F>", function() Snacks.picker.grep() end, { desc = "Find in Files (Cmd+Shift+F)" })
+
+-- Replace: Cmd+H / Cmd+Shift+H
+map({ "n", "i", "x", "s" }, "<D-h>", function() _G.ReplaceInFile() end, { desc = "Replace in File (Cmd+H)" })
+map({ "n", "i" }, "<D-S-h>", function() _G.ReplaceInFiles() end, { desc = "Replace in Files (Cmd+Shift+H)" })
+
+-- Go to Line: Cmd+G
+map({ "n", "i" }, "<D-g>", go_to_line, { desc = "Go to Line (Cmd+G)" })
+
+-- Clipboard: Cmd+C, Cmd+V, Cmd+X
+map({ "x", "s" }, "<D-c>", copy_selection, { desc = "Copy Selection (Cmd+C)" })
+map("n", "<D-c>", copy_line, { desc = "Copy Current Line (Cmd+C)" })
+map("i", "<D-c>", copy_line, { desc = "Copy Current Line (Cmd+C)" })
+
+map("n", "<D-v>", '"+p', { desc = "Paste (Cmd+V)" })
+map({ "x", "s" }, "<D-v>", paste_selection, { desc = "Paste Over Selection (Cmd+V)" })
+map("i", "<D-v>", "<C-r><C-o>+", { desc = "Paste from Clipboard (Cmd+V)" })
+
+map({ "x", "s" }, "<D-x>", cut_selection, { desc = "Cut Selection (Cmd+X)" })
+map("n", "<D-x>", cut_line_insert, { desc = "Cut Current Line (Cmd+X)" })
+map("i", "<D-x>", cut_line_insert, { desc = "Cut Current Line (Cmd+X)" })
+
+-- Select All: Cmd+A
+map({ "n", "i", "x", "s" }, "<D-a>", "<Esc>ggVG<C-g>", { desc = "Select All (Cmd+A)" })
+
+-- Comments: Cmd+/ (Line) and Cmd+Alt+A (Block)
+map({ "n", "i", "x", "s" }, "<D-/>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Toggle Line Comment (Cmd+/)" })
+map({ "n", "i", "x", "s" }, "<D-A-a>", function() _G.ToggleBlockComment(vim.fn.mode()) end, { desc = "Toggle Block Comment (Cmd+Option+A)" })
+map({ "n", "i", "x", "s" }, "<D-A-A>", function() _G.ToggleBlockComment(vim.fn.mode()) end, { desc = "Toggle Block Comment (Cmd+Option+A)" })
+
+-- Quick Fix / Solutions: Cmd+.
+map({ "n", "i" }, "<D-.>", unified_quick_fix, { desc = "Quick Fix / Solutions (Cmd+.)" })
+
+-- Multi-Cursor: Cmd+D (Add Next Match)
+map({ "n", "i", "x" }, "<D-d>", "<C-d>", { remap = true, desc = "Add Next Match Multi-Cursor (Cmd+D)" })
 
 -- New File: Cmd+N / Open Folder: Cmd+O
 map({ "n", "i" }, "<D-n>", "<cmd>enew<cr><cmd>startinsert<cr>", { desc = "New File (Cmd+N)" })
@@ -2202,6 +2273,9 @@ map({ "n", "i", "x", "s" }, "<D-S-z>", "<Esc><C-r><cmd>startinsert<cr>", { desc 
 -- Toggle Sidebar: Cmd+B
 map({ "n", "i" }, "<D-b>", function() Snacks.explorer() end, { desc = "Toggle Explorer Sidebar (Cmd+B)" })
 
+-- Toggle Terminal: Cmd+` or Ctrl+`
+map({ "n", "i", "t" }, "<D-`>", toggle_terminal, { desc = "Toggle Terminal (Cmd+`)" })
+
 -- Close Tab: Cmd+W / Quit: Cmd+Q
-map({ "n", "i" }, "<D-w>", function() pcall(vim.cmd, "bdelete") end, { desc = "Close Tab (Cmd+W)" })
+map({ "n", "i" }, "<D-w>", close_current_buffer, { desc = "Close Tab (Cmd+W)" })
 map({ "n", "i", "s", "x", "t" }, "<D-q>", function() _G.SmartQuit() end, { desc = "Quit Minimal (Cmd+Q)" })
