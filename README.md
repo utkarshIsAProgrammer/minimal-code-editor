@@ -107,7 +107,7 @@ minimal main.py     # Opens specific file
 | **Open Folder** | <kbd>Ctrl</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>O</kbd> | Select or type any folder path to open as workspace |
 | **Command Palette** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | Fuzzy-search and execute all editor commands |
 | **Toggle Sidebar** | <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | Opens/closes Explorer file tree |
-| **Run Current File** | <kbd>Ctrl</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | <kbd>⌘</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | Executes active code file in bottom terminal drawer |
+| **Run Current File** | <kbd>F5</kbd> *(or <kbd>Ctrl</kbd>+<kbd>F5</kbd>)* | <kbd>F5</kbd> *(or <kbd>⌘</kbd>+<kbd>F5</kbd>)* | Executes active code file in bottom terminal drawer |
 | **Live Server** | <kbd>Alt</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | <kbd>⌥</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | Toggles local live HTTP reload server with auto-browser opening |
 | **Toggle Terminal** | <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> | Opens/closes active terminal panel |
 | **New Terminal Instance**| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | Spawns a new independent terminal instance (#1, #2, #3...) |

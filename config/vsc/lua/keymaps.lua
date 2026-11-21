@@ -2009,10 +2009,8 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- -------------------------------------------------------------------
--- 19. One-Click Code Runner (Ctrl+' and F5)
+-- 19. One-Click Code Runner (F5 and Ctrl+F5)
 -- -------------------------------------------------------------------
-map({ "n", "i" }, "<C-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+')" })
-map({ "n", "i" }, "<D-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+')" })
 map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
 map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
 
@@ -2845,8 +2843,6 @@ function _G.RunCurrentFile()
   end
 end
 
-map({ "n", "i" }, "<C-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+')" })
-map({ "n", "i" }, "<D-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+')" })
 map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
 map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
 map({ "n", "i" }, "<D-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+F5)" })

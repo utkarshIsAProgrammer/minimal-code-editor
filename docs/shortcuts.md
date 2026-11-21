@@ -98,7 +98,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | <kbd>F8</kbd> | <kbd>F8</kbd> | **Next Problem** | Jumps to next error / warning in buffer. |
 | <kbd>Shift</kbd>+<kbd>F8</kbd> | <kbd>Shift</kbd>+<kbd>F8</kbd> | **Previous Problem** | Jumps to previous error / warning in buffer. |
 | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | **Format Document** | Formats buffer via Prettier / Conform / LSP. |
-| <kbd>Ctrl</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | <kbd>⌘</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | **Run Current File** | Executes active code file in bottom terminal drawer. |
+| <kbd>F5</kbd> *(or <kbd>Ctrl</kbd>+<kbd>F5</kbd>)* | <kbd>F5</kbd> *(or <kbd>⌘</kbd>+<kbd>F5</kbd>)* | **Run Current File** | Executes active code file in bottom terminal drawer. |
 | <kbd>Alt</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | <kbd>⌥</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | **Live Server Toggle** | Starts/stops local live HTTP reload server with browser auto-open. |
 | <kbd>Esc</kbd> *(or <kbd>Ctrl</kbd>+<kbd>E</kbd> / <kbd>Shift</kbd>+<kbd>Esc</kbd>)* | <kbd>Esc</kbd> | **Dismiss Suggestions** | Closes completion popup synchronously with zero cursor shift. |
 
