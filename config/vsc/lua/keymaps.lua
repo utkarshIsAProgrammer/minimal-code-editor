@@ -2709,7 +2709,7 @@ vim.api.nvim_create_user_command("Theme", handle_theme_cmd, { nargs = "?", compl
 vim.api.nvim_create_user_command("ColorTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
 vim.api.nvim_create_user_command("SelectTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
 vim.api.nvim_create_user_command("ChangeTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
-vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between Dark Magic, Cyber Aurora, and Medieval Scriptorium" })
+vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between handcrafted Minimal color themes" })
 
 -- Indent Rainbow Guides Command
 function _G.ToggleIndentRainbow()
