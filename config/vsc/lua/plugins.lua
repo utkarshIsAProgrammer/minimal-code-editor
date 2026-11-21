@@ -901,42 +901,54 @@ return {
         table.insert(ensure, "clangd")
       end
 
+      local is_nvim_011 = (vim.fn.has("nvim-0.11") == 1)
+
       return {
         automatic_installation = false,
         ensure_installed = ensure,
         handlers = {
           function(server_name)
-            local ok, lspconfig = pcall(require, "lspconfig")
-            if ok and lspconfig[server_name] then
-              local caps = {}
-              local ok_blink, blink = pcall(require, "blink.cmp")
-              if ok_blink then
-                caps = blink.get_lsp_capabilities()
-              end
+            local caps = {}
+            local ok_blink, blink = pcall(require, "blink.cmp")
+            if ok_blink then
+              caps = blink.get_lsp_capabilities()
+            end
 
-              -- Special high-performance config for Go (gopls)
+            if is_nvim_011 then
+              local cfg = { capabilities = caps }
               if server_name == "gopls" then
-                lspconfig.gopls.setup({
-                  capabilities = caps,
-                  settings = {
-                    gopls = {
-                      analyses = {
-                        unusedparams = true,
-                        shadow = true,
-                      },
-                      staticcheck = true,
-                      gofumpt = true,
-                      completeUnimported = true,
-                      usePlaceholders = true,
-                    },
+                cfg.settings = {
+                  gopls = {
+                    analyses = { unusedparams = true, shadow = true },
+                    staticcheck = true,
+                    gofumpt = true,
+                    completeUnimported = true,
+                    usePlaceholders = true,
                   },
-                })
-                return
+                }
               end
-
-              lspconfig[server_name].setup({
-                capabilities = caps,
-              })
+              vim.lsp.config(server_name, cfg)
+              vim.lsp.enable(server_name)
+            else
+              local ok, lspconfig = pcall(require, "lspconfig")
+              if ok and lspconfig[server_name] then
+                if server_name == "gopls" then
+                  lspconfig.gopls.setup({
+                    capabilities = caps,
+                    settings = {
+                      gopls = {
+                        analyses = { unusedparams = true, shadow = true },
+                        staticcheck = true,
+                        gofumpt = true,
+                        completeUnimported = true,
+                        usePlaceholders = true,
+                      },
+                    },
+                  })
+                else
+                  lspconfig[server_name].setup({ capabilities = caps })
+                end
+              end
             end
           end,
         },
@@ -948,6 +960,7 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     config = function()
       -- Attach to system-installed LSPs if available on PATH
+      local is_nvim_011 = (vim.fn.has("nvim-0.11") == 1)
       local caps = {}
       local ok_blink, blink = pcall(require, "blink.cmp")
       if ok_blink then
@@ -959,7 +972,7 @@ return {
         "emmet_ls", "tailwindcss", "clangd", "rust_analyzer", "bashls", "yamlls"
       }
 
-      if vim.lsp.config and vim.lsp.enable then
+      if is_nvim_011 then
         for _, srv in ipairs(common_servers) do
           if vim.fn.executable(srv) == 1 then
             pcall(function()
@@ -975,7 +988,7 @@ return {
                   },
                 }
               end
-              vim.lsp.config[srv] = cfg
+              vim.lsp.config(srv, cfg)
               vim.lsp.enable(srv)
             end)
           end
