@@ -514,33 +514,32 @@ return {
       keymap = {
         preset = "super-tab",
         ["<CR>"] = { "accept", "fallback" },
-        ["<Esc>"] = {
-          function(cmp)
-            local is_open = false
-            local menu_ok, menu = pcall(require, "blink.cmp.completion.windows.menu")
-            if (cmp.is_visible and cmp.is_visible()) or (menu_ok and menu and menu.win and menu.win:is_open()) then
-              is_open = true
-            end
-            if vim.fn.pumvisible() == 1 then
-              vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-e>", true, false, true), "n")
-              return true
-            end
-            if is_open then
-              vim.schedule(function()
-                pcall(function()
-                  if menu and menu.close then menu.close() end
-                  local trigger = require("blink.cmp.completion.trigger")
-                  if trigger and trigger.hide then trigger.hide() end
-                  local list = require("blink.cmp.completion.list")
-                  if list and list.hide then list.hide() end
-                  local doc = require("blink.cmp.completion.windows.documentation")
-                  if doc and doc.close then doc.close() end
-                end)
-              end)
-              return true
-            end
-          end,
-          "fallback",
+        ["<Esc>"] = { "cancel", "fallback" },
+        ["<C-e>"] = { "cancel", "fallback" },
+      },
+      completion = {
+        accept = {
+          dot_repeat = false, -- Disables Vim dot-repeat hack that injected '_' or 'a' or left characters!
+        },
+        list = {
+          selection = {
+            preselect = false, -- Don't automatically select the first suggestion
+            auto_insert = false, -- Don't insert preview text until explicitly selected
+          },
+        },
+        menu = {
+          border = "rounded",
+          scrollbar = false, -- Clean, modern popups without bulky scrollbar
+          draw = {
+            columns = { { "label", "label_description", gap = 1 }, { "kind_icon", "kind" } },
+          },
+        },
+        documentation = {
+          auto_show = true,
+          window = {
+            border = "rounded",
+            scrollbar = false, -- Clean documentation without bulky scrollbar
+          },
         },
       },
       sources = {
@@ -618,25 +617,6 @@ return {
                 return triggers
               end,
             },
-          },
-        },
-      },
-      completion = {
-        accept = {
-          dot_repeat = false, -- Disables Vim dot-repeat hack that injected '_' or 'a' or left characters!
-        },
-        menu = {
-          border = "rounded",
-          scrollbar = false, -- Clean, modern popups without bulky scrollbar
-          draw = {
-            columns = { { "label", "label_description", gap = 1 }, { "kind_icon", "kind" } },
-          },
-        },
-        documentation = {
-          auto_show = true,
-          window = {
-            border = "rounded",
-            scrollbar = false, -- Clean documentation without bulky scrollbar
           },
         },
       },
