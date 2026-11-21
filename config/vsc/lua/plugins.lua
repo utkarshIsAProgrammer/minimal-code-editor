@@ -142,7 +142,7 @@ return {
             {
               icon = " ",
               key = "f",
-              desc = "Find File (Ctrl+P)",
+              desc = "Open File (Ctrl+P)",
               action = function()
                 local ok, snacks = pcall(require, "snacks")
                 if ok and snacks.picker then snacks.picker.files() end
@@ -173,7 +173,7 @@ return {
             {
               icon = " ",
               key = "g",
-              desc = "Find in Files (Ctrl+Shift+F)",
+              desc = "Search in Files (Ctrl+Shift+F)",
               action = function()
                 local ok, snacks = pcall(require, "snacks")
                 if ok and snacks.picker then snacks.picker.grep() end

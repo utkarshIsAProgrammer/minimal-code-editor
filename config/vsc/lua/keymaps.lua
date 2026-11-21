@@ -705,32 +705,74 @@ function _G.CreateNewDirectory()
 end
 
 function _G.OpenFolderPicker(target_dir)
-  if target_dir and target_dir ~= "" then
-    local path = vim.fn.fnamemodify(target_dir, ":p")
-    if vim.fn.isdirectory(path) == 1 then
-      vim.fn.chdir(path)
-      vim.notify("Workspace opened: " .. path, vim.log.levels.INFO, { title = "Open Folder" })
-      local ok, snacks = pcall(require, "snacks")
-      if ok and snacks.explorer then snacks.explorer({ cwd = path }) end
-      return
+  local ok_snacks, snacks = pcall(require, "snacks")
+
+  local function do_open_dir(dir_path)
+    if not dir_path or dir_path == "" then return end
+    dir_path = vim.fn.expand(dir_path)
+    local full = vim.fn.fnamemodify(dir_path, ":p")
+
+    if vim.fn.isdirectory(full) == 1 then
+      vim.fn.chdir(full)
+      if _G.AddRecentFolder then _G.AddRecentFolder(full) end
+      vim.notify("✓ Workspace opened: " .. full, vim.log.levels.INFO, { title = "Open Folder" })
+      vim.schedule(function()
+        if ok_snacks and snacks.explorer then
+          snacks.explorer({ cwd = full })
+        end
+      end)
+    elseif vim.fn.filereadable(full) == 1 then
+      local parent = vim.fn.fnamemodify(full, ":h")
+      vim.fn.chdir(parent)
+      if _G.AddRecentFolder then _G.AddRecentFolder(parent) end
+      if _G.AddRecentFile then _G.AddRecentFile(full) end
+      vim.cmd("edit " .. vim.fn.fnameescape(full))
+      vim.notify("✓ Opened: " .. vim.fn.fnamemodify(full, ":t"), vim.log.levels.INFO, { title = "Open File" })
     else
-      vim.notify("Directory does not exist: " .. target_dir, vim.log.levels.WARN, { title = "Open Folder" })
-      return
+      vim.notify("Directory does not exist: " .. dir_path, vim.log.levels.WARN, { title = "Open Folder" })
     end
   end
 
-  local ok_snacks, snacks = pcall(require, "snacks")
+  if target_dir and target_dir ~= "" then
+    do_open_dir(target_dir)
+    return
+  end
+
   if not ok_snacks or not snacks.picker then
-    vim.notify("Snacks picker not available", vim.log.levels.ERROR)
+    vim.ui.input({ prompt = "󰉎 Open Folder Path: ", default = vim.fn.getcwd() .. "/", completion = "dir" }, function(input)
+      if input and input ~= "" then
+        do_open_dir(input)
+      end
+    end)
     return
   end
 
   local has_fd = vim.fn.executable("fd") == 1
   local home = vim.env.HOME or vim.env.USERPROFILE or "."
 
+  local function get_target_from_picker(picker, item)
+    local dir = nil
+    if item and (item.file or item.text) then
+      dir = item.file or item.text
+    end
+    if (not dir or dir == "") and picker and picker.input then
+      local p_text = pcall(function() return picker.input:get() end) and picker.input:get()
+      if p_text and p_text ~= "" then
+        dir = p_text
+      end
+    end
+    if (not dir or dir == "") and picker then
+      local filter = pcall(function() return picker:filter() end) and picker:filter()
+      if filter and (filter.pattern or filter.search) then
+        dir = filter.pattern or filter.search
+      end
+    end
+    return dir
+  end
+
   if has_fd then
     snacks.picker({
-      title = "Open Project / Folder",
+      title = "Open Project / Folder (select or type path)",
       finder = function(opts, ctx)
         return require("snacks.picker.source.proc").proc(
           ctx:opts({
@@ -759,18 +801,9 @@ function _G.OpenFolderPicker(target_dir)
       end,
       format = "file",
       confirm = function(picker, item)
+        local dir = get_target_from_picker(picker, item)
         picker:close()
-        local dir = item and (item.file or item.text)
-        if not dir or dir == "" then return end
-        dir = vim.fn.fnamemodify(dir, ":p")
-        if vim.fn.isdirectory(dir) == 1 then
-          vim.fn.chdir(dir)
-          if _G.AddRecentFolder then _G.AddRecentFolder(dir) end
-          vim.notify("Workspace opened: " .. dir, vim.log.levels.INFO, { title = "Open Folder" })
-          vim.schedule(function() snacks.explorer({ cwd = dir }) end)
-        else
-          vim.notify("Directory does not exist: " .. dir, vim.log.levels.WARN, { title = "Open Folder" })
-        end
+        do_open_dir(dir)
       end,
     })
   else
@@ -811,22 +844,13 @@ function _G.OpenFolderPicker(target_dir)
     end
 
     snacks.picker({
-      title = "Open Project / Folder",
+      title = "Open Project / Folder (select or type path)",
       items = items,
       format = "file",
       confirm = function(picker, item)
+        local dir = get_target_from_picker(picker, item)
         picker:close()
-        local dir = item and (item.file or item.text)
-        if not dir or dir == "" then return end
-        dir = vim.fn.fnamemodify(dir, ":p")
-        if vim.fn.isdirectory(dir) == 1 then
-          vim.fn.chdir(dir)
-          if _G.AddRecentFolder then _G.AddRecentFolder(dir) end
-          vim.notify("Workspace opened: " .. dir, vim.log.levels.INFO, { title = "Open Folder" })
-          vim.schedule(function() snacks.explorer({ cwd = dir }) end)
-        else
-          vim.notify("Directory does not exist: " .. dir, vim.log.levels.WARN, { title = "Open Folder" })
-        end
+        do_open_dir(dir)
       end,
     })
   end
