@@ -1454,8 +1454,29 @@ map({ "n", "i" }, "<A-S-Down>", "<cmd>t.<cr>", { desc = "Duplicate Line Down (VS
 map("x", "<M-S-Down>", ":t '><cr>gv", { desc = "Duplicate Selection Down (VS Code Shift+Alt+Down)" })
 map("x", "<A-S-Down>", ":t '><cr>gv", { desc = "Duplicate Selection Down (VS Code Shift+Alt+Down)" })
 
-map({ "n", "i" }, "<C-CR>", "<Esc>o", { desc = "Insert Line Below (Ctrl+Enter)" })
-map({ "n", "i" }, "<C-S-CR>", "<Esc>O", { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
+local function insert_line_below()
+  if vim.fn.mode():match("^[iR]") then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>o", true, false, true), "n", false)
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("o", true, false, true), "n", false)
+  end
+end
+
+local function insert_line_above()
+  if vim.fn.mode():match("^[iR]") then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>O", true, false, true), "n", false)
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("O", true, false, true), "n", false)
+  end
+end
+
+map({ "n", "i" }, "<C-CR>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
+map({ "n", "i" }, "<C-Enter>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
+map({ "n", "i" }, "\27[13;5u", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter CSI u)" })
+
+map({ "n", "i" }, "<C-S-CR>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
+map({ "n", "i" }, "<C-S-Enter>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
+map({ "n", "i" }, "\27[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u)" })
 
 map({ "x", "s" }, "<Tab>", function()
   vim.cmd("normal! \27gv>gv")
