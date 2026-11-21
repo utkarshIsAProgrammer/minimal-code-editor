@@ -78,6 +78,3 @@ require("keymaps")
 
 -- 6. Load persistent recent workspaces & files tracker
 require("recents")
-
--- 7. Load cursor styles & motion physics manager
-pcall(function() require("cursor").setup() end)

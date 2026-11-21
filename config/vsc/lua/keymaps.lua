@@ -2711,34 +2711,6 @@ vim.api.nvim_create_user_command("SelectTheme", handle_theme_cmd, { nargs = "?",
 vim.api.nvim_create_user_command("ChangeTheme", handle_theme_cmd, { nargs = "?", complete = theme_complete, desc = "Select or switch color theme" })
 vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between Dark Magic, Cyber Aurora, and Medieval Scriptorium" })
 
--- Cursor Style commands & shortcuts (Modern Beam & Particle styles, NO block/underline)
-local function handle_cursor_cmd(opts)
-  local cursor_mgr = require("cursor")
-  local arg = opts.args and vim.trim(opts.args) or ""
-  if arg ~= "" then
-    cursor_mgr.set_style(arg, true)
-  else
-    cursor_mgr.picker()
-  end
-end
-
-local cursor_complete = function(arglead)
-  local cursor_mgr = require("cursor")
-  local matches = {}
-  for _, s in ipairs(cursor_mgr.styles) do
-    if s.id:lower():find(arglead:lower(), 1, true) or s.name:lower():find(arglead:lower(), 1, true) then
-      table.insert(matches, s.id)
-    end
-  end
-  return matches
-end
-
-vim.api.nvim_create_user_command("CursorStyle", handle_cursor_cmd, { nargs = "?", complete = cursor_complete, desc = "Select cursor style (Beam & Particle physics)" })
-vim.api.nvim_create_user_command("Cursor", handle_cursor_cmd, { nargs = "?", complete = cursor_complete, desc = "Select cursor style (Beam & Particle physics)" })
-
-map({ "n", "i" }, "<F9>", function() require("cursor").picker() end, { desc = "Cursor Style Picker (F9)" })
-map({ "n", "i" }, "<M-c>", function() require("cursor").picker() end, { desc = "Cursor Style Picker (Alt+C)" })
-
 -- Indent Rainbow Guides Command
 function _G.ToggleIndentRainbow()
   local ok, snacks = pcall(require, "snacks")
