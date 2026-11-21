@@ -28,40 +28,10 @@ M.themes = {
     icon = "📜 ",
   },
   {
-    name = "phosphor",
-    label = "Phosphor Terminal",
-    desc = "Amber Cathode CRT & Retro Telemetry (#0b0906)",
-    icon = "🧪 ",
-  },
-  {
-    name = "espressonoir",
-    label = "Espresso Roast",
-    desc = "Warm Lo-Fi Cafe Noir, Steamed Crema & Matcha (#120e0d)",
-    icon = "☕ ",
-  },
-  {
-    name = "frostbite",
-    label = "Glacial Arctic",
-    desc = "Sub-Zero Scandinavian Frost & Polar Cyan (#080c12)",
-    icon = "❄️ ",
-  },
-  {
-    name = "abyssal",
-    label = "Abyssal Trench",
-    desc = "Mariana Depths & Bioluminescent Electric Aqua (#05080f)",
-    icon = "🪼 ",
-  },
-  {
     name = "nocturne",
     label = "Crimson Nocturne",
     desc = "Gothic Black Velvet, Mahogany & Dragon Ruby (#0b0709)",
     icon = "🩸 ",
-  },
-  {
-    name = "industrial",
-    label = "Cyberdeck Industrial",
-    desc = "Hazard Caution Yellow & Matte Titanium (#101214)",
-    icon = "⚠️ ",
   },
 }
 
@@ -120,12 +90,7 @@ function M.toggle()
     "darkmagic",
     "cyberaurora",
     "medieval",
-    "phosphor",
-    "espressonoir",
-    "frostbite",
-    "abyssal",
     "nocturne",
-    "industrial",
   }
   local next_theme = cycle[1]
   for i, name in ipairs(cycle) do

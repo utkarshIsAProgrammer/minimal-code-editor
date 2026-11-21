@@ -120,7 +120,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 | Linux / Windows | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
-| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Interactive theme picker with live syntax showroom preview across all 9 handcrafted themes. |
-| <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | **Cycle Themes** | Quick-cycles: Dark Magic → Cyber Aurora → Medieval → Phosphor → Espresso → Frostbite → Abyssal → Nocturne → Industrial. |
-| `:Theme <name>` | `:Theme <name>` | **Command Switch** | Directly sets theme with autocomplete (`:Theme phosphor`, `:Theme espressonoir`, `:Theme abyssal`, etc.). |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Interactive theme picker with live syntax showroom preview across all 4 handcrafted themes. |
+| <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | **Cycle Themes** | Quick-cycles: Dark Magic → Cyber Aurora → Medieval Scriptorium → Crimson Nocturne. |
+| `:Theme <name>` | `:Theme <name>` | **Command Switch** | Directly sets theme with autocomplete (`:Theme darkmagic`, `:Theme cyberaurora`, `:Theme medieval`, `:Theme nocturne`). |
 | `:IndentRainbow` | `:IndentRainbow` | **Indent Scope** | Toggles glowing LazyVim-style emerald indent scope guides. |
