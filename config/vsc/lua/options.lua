@@ -22,8 +22,8 @@ opt.mousemoveevent = false  -- Disable mouse movement tracking to prevent floati
 -- Programmer Font: CaskaydiaCove Nerd Font Mono (Cascadia Code with programming ligatures for nerds & geeks)
 opt.guifont = "CaskaydiaCove Nerd Font Mono,BlexMono Nerd Font Mono,JetBrainsMono Nerd Font Mono:h11.5"
 
--- Cursor: Blinking vertical pipe cursor in ALL states (never a block cursor)
-opt.guicursor = "n-v-c-i-ci-ve:ver25-blinkon500-blinkoff500"
+-- Cursor: Solid/blinking block in Normal/Visual/Command, thin blinking bar in Insert
+opt.guicursor = "n-c-sm:block-blinkon500-blinkoff500,i-ci-ve:ver25-blinkon500-blinkoff500,v:block,r-cr:hor20-blinkon500-blinkoff500"
 
 -- Full Mouse Support (click to position, drag to select, scroll wheel)
 opt.mouse = "a"

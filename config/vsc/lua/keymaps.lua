@@ -181,6 +181,8 @@ local function handle_escape()
     vim.cmd("normal! \27")
   end
   vim.cmd("stopinsert")
+  vim.cmd("nohlsearch")
+  vim.api.nvim_echo({ { "󰅪 NORMAL", "ModeMsg" }, { " • Press 'i' to edit", "Comment" } }, false, {})
 end
 
 map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { desc = "Enter Normal Mode / Close Menus (Esc)" })
@@ -662,7 +664,7 @@ vim.api.nvim_create_autocmd({ "BufLeave", "VimLeavePre" }, {
     io.write("\027[?25h")
     io.flush()
     pcall(function()
-      vim.opt.guicursor = "n-v-c-i-ci-ve:ver25-blinkon500-blinkoff500"
+      vim.opt.guicursor = "n-c-sm:block-blinkon500-blinkoff500,i-ci-ve:ver25-blinkon500-blinkoff500,v:block,r-cr:hor20-blinkon500-blinkoff500"
     end)
   end,
   desc = "Restore text editing cursor when leaving homescreen",

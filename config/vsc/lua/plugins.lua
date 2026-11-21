@@ -95,8 +95,25 @@ return {
       sections = {
         lualine_a = {
           {
-            function()
-              return "󰅪 MINIMAL"
+            "mode",
+            fmt = function(str)
+              if vim.bo.filetype == "snacks_dashboard" then
+                return "󰅪 MINIMAL"
+              end
+              local mode_map = {
+                ["NORMAL"] = "󰅪 NORMAL",
+                ["INSERT"] = "󰏫 INSERT",
+                ["VISUAL"] = "󰈈 VISUAL",
+                ["V-LINE"] = "󰈈 V-LINE",
+                ["V-BLOCK"] = "󰈈 V-BLOCK",
+                ["SELECT"] = "󰒅 SELECT",
+                ["S-LINE"] = "󰒅 S-LINE",
+                ["S-BLOCK"] = "󰒅 S-BLOCK",
+                ["REPLACE"] = "󰛔 REPLACE",
+                ["COMMAND"] = "󰘳 COMMAND",
+                ["TERMINAL"] = "󰞷 TERMINAL",
+              }
+              return mode_map[str] or ("󰅪 " .. (str or ""))
             end,
             separator = { left = "", right = "" },
           },
