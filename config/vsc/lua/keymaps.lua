@@ -248,11 +248,13 @@ local function handle_escape()
   end
 
   -- Pure Modeless: ALWAYS remain in Insert/Typing mode (Zero Normal Mode)
-  vim.cmd("startinsert")
+  if vim.fn.mode() ~= "i" then
+    vim.cmd("startinsert")
+  end
 end
 
-map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { desc = "Close Menus & Popups (100% Modeless Esc)" })
-map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { desc = "Close Menus & Popups (100% Modeless Shift+Esc)" })
+map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { nowait = true, desc = "Close Menus & Popups (100% Modeless Esc)" })
+map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { nowait = true, desc = "Close Menus & Popups (100% Modeless Shift+Esc)" })
 _G.handle_escape = handle_escape
 
 
@@ -1466,13 +1468,9 @@ end
 
 map({ "i", "n", "x", "s" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
 map({ "i", "n", "x", "s" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
-map({ "i", "n", "x", "s" }, "<Esc>[127;5u", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace CSI u)" })
-map({ "i", "n", "x", "s" }, "\x1b[127;5u", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace CSI u raw)" })
 
 map({ "i", "n", "x", "s" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
 map({ "i", "n", "x", "s" }, "<C-Delete>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
-map({ "i", "n", "x", "s" }, "<Esc>[3;5~", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete CSI u)" })
-map({ "i", "n", "x", "s" }, "\x1b[3;5~", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete CSI u raw)" })
 map({ "i", "n", "x", "s" }, "<M-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-d>", delete_word_right, { desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
@@ -1553,15 +1551,11 @@ end
 
 map({ "n", "i" }, "<C-CR>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
 map({ "n", "i" }, "<C-Enter>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
-map({ "n", "i" }, "<Esc>[13;5u", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter CSI u)" })
-map({ "n", "i" }, "\x1b[13;5u", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter CSI u raw)" })
 map({ "n", "i" }, "<M-o>", insert_line_below, { desc = "Insert Line Below (Alt+o)" })
 map({ "n", "i" }, "<A-o>", insert_line_below, { desc = "Insert Line Below (Alt+o)" })
 
 map({ "n", "i" }, "<C-S-CR>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
 map({ "n", "i" }, "<C-S-Enter>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
-map({ "n", "i" }, "<Esc>[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u)" })
-map({ "n", "i" }, "\x1b[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u raw)" })
 map({ "n", "i" }, "<M-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
 map({ "n", "i" }, "<A-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
 map({ "n", "i" }, "<M-S-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+Enter)" })

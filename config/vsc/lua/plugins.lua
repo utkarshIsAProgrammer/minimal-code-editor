@@ -446,14 +446,23 @@ return {
           "SnacksIndent5",
           "SnacksIndent6",
         },
-      },
-      scope = {
-        enabled = true,
-        priority = 200,
-        char = "│",
-        underline = false,
-        only_current = false,
-        hl = "SnacksIndentScope",
+        animate = {
+          enabled = true,
+          style = "out",
+          easing = "linear",
+          duration = {
+            step = 15,
+            total = 300,
+          },
+        },
+        scope = {
+          enabled = true,
+          priority = 200,
+          char = "│",
+          underline = false,
+          only_current = false,
+          hl = "SnacksIndentScope",
+        },
       },
     },
     config = function(_, opts)
@@ -481,10 +490,30 @@ return {
       vim.api.nvim_set_hl(0, "SnacksIndent4", { fg = "#56b6c2" }) -- Cyan / Teal
       vim.api.nvim_set_hl(0, "SnacksIndent5", { fg = "#61afef" }) -- Blue
       vim.api.nvim_set_hl(0, "SnacksIndent6", { fg = "#c678dd" }) -- Purple
-      vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = "#abb2bf", bold = true }) -- Active scope line
+      -- Indent Scope (Signature LazyVim Glowing Emerald Green)
+      vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = "#a6e3a1", bold = true }) -- Active scope line
+      vim.api.nvim_set_hl(0, "SnacksIndentChunk", { fg = "#a6e3a1", bold = true })
+      vim.api.nvim_set_hl(0, "MiniIndentscopeSymbol", { fg = "#a6e3a1", bold = true })
+      vim.api.nvim_set_hl(0, "SnacksIndent", { fg = "#3b4252" })
 
       require("snacks").setup(opts)
     end,
+  },
+
+  -- 5b. Smear Cursor (Silky Smooth Flowing Cursor Physics)
+  {
+    "sphamba/smear-cursor.nvim",
+    event = "VeryLazy",
+    opts = {
+      vertical_bar_cursor = true,
+      vertical_bar_cursor_insert_mode = true,
+      smear_insert_mode = true,
+      smear_between_neighbor_lines = true,
+      stiffness = 0.8,
+      trailing_stiffness = 0.5,
+      distance_stop_animating = 0.5,
+      hide_target_hack = false,
+    },
   },
 
   -- 6. Error Lens (Inline Diagnostics Badges & Background + Gutter Signs)
@@ -541,17 +570,14 @@ return {
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = {
           function(cmp)
-            if cmp.is_visible() then
-              cmp.cancel()
-              cmp.hide()
-              return true
-            end
             if _G.handle_escape then
               _G.handle_escape()
               return true
             end
+            pcall(cmp.cancel)
+            pcall(cmp.hide)
+            return true
           end,
-          "fallback",
         },
         ["<C-e>"] = { "cancel", "fallback" },
         ["<C-Space>"] = {

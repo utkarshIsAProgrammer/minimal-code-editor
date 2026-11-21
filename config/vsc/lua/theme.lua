@@ -169,7 +169,11 @@ function M.apply_indent_rainbow()
   vim.api.nvim_set_hl(0, "SnacksIndent4", { fg = "#56b6c2" }) -- Cyan / Teal
   vim.api.nvim_set_hl(0, "SnacksIndent5", { fg = "#61afef" }) -- Blue
   vim.api.nvim_set_hl(0, "SnacksIndent6", { fg = "#c678dd" }) -- Purple
-  vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = "#abb2bf", bold = true }) -- Active scope line
+  -- Indent Scope (Signature LazyVim Glowing Emerald Green)
+  vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = "#a6e3a1", bold = true }) -- Active scope line
+  vim.api.nvim_set_hl(0, "SnacksIndentChunk", { fg = "#a6e3a1", bold = true })
+  vim.api.nvim_set_hl(0, "MiniIndentscopeSymbol", { fg = "#a6e3a1", bold = true })
+  vim.api.nvim_set_hl(0, "SnacksIndent", { fg = "#3b4252" })
 end
 
 -- Listen to any external colorscheme changes and persist them
