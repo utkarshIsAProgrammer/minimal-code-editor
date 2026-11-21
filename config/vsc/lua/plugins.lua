@@ -664,20 +664,34 @@ return {
     end,
   },
 
-  -- 9. Universal Commenting (Ctrl+/ single & multiline like VS Code)
+  -- 9. Universal Commenting (Ctrl+/ single & multiline, Shift+Alt+A block comments like VS Code)
   {
-    "numToStr/Comment.nvim",
-    lazy = false,
+    "folke/ts-comments.nvim",
+    event = "VeryLazy",
     opts = {},
-    config = function()
-      require("Comment").setup()
-
-      function _G.ToggleComment(mode)
+    init = function()
+      local function ensure_commentstring()
         local cur_buf = vim.api.nvim_get_current_buf()
-        if not vim.bo[cur_buf].commentstring or vim.bo[cur_buf].commentstring == "" then
-          vim.bo[cur_buf].commentstring = "// %s"
+        local cs = vim.bo[cur_buf].commentstring
+        if not cs or cs == "" then
+          local ft = vim.bo[cur_buf].filetype
+          if ft == "lua" then
+            vim.bo[cur_buf].commentstring = "-- %s"
+          elseif ft == "python" or ft == "sh" or ft == "bash" or ft == "yaml" or ft == "toml" then
+            vim.bo[cur_buf].commentstring = "# %s"
+          elseif ft == "html" or ft == "xml" or ft == "markdown" then
+            vim.bo[cur_buf].commentstring = "<!-- %s -->"
+          elseif ft == "css" then
+            vim.bo[cur_buf].commentstring = "/* %s */"
+          else
+            vim.bo[cur_buf].commentstring = "// %s"
+          end
         end
+      end
 
+      -- Line Comment Toggle (Ctrl+/)
+      function _G.ToggleLineComment(mode)
+        ensure_commentstring()
         if mode == "x" or mode == "s" then
           vim.cmd("normal! \27")
           local s_line = vim.fn.getpos("'<")[2]
@@ -685,35 +699,105 @@ return {
           if s_line > e_line then s_line, e_line = e_line, s_line end
           if s_line <= 0 then s_line = 1 end
           if e_line <= 0 then e_line = s_line end
-          vim.cmd(string.format("%d,%dnormal gcc", s_line, e_line))
+
+          local cur_pos = vim.api.nvim_win_get_cursor(0)
+          for line = s_line, e_line do
+            vim.api.nvim_win_set_cursor(0, { line, 0 })
+            pcall(vim.cmd, "normal gcc")
+          end
+          pcall(vim.api.nvim_win_set_cursor, 0, cur_pos)
           vim.cmd("normal! gv")
           if mode == "s" then
             vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-g>", true, false, true), "n", false)
           end
         elseif mode == "i" then
-          vim.cmd("normal gcc")
+          local cur_pos = vim.api.nvim_win_get_cursor(0)
+          pcall(vim.cmd, "normal gcc")
+          pcall(vim.api.nvim_win_set_cursor, 0, cur_pos)
           vim.cmd("startinsert")
         else
-          vim.cmd("normal gcc")
+          pcall(vim.cmd, "normal gcc")
         end
       end
 
-      local map = vim.keymap.set
-      -- Single line comment toggle (Ctrl+/ and Ctrl+_)
-      map("n", "<C-/>", function() _G.ToggleComment("n") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
-      map("n", "<C-_>", function() _G.ToggleComment("n") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
-      map("i", "<C-/>", function() _G.ToggleComment("i") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
-      map("i", "<C-_>", function() _G.ToggleComment("i") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
+      -- Block Comment Toggle (Shift+Alt+A)
+      function _G.ToggleBlockComment(mode)
+        ensure_commentstring()
+        local ft = vim.bo.filetype
+        local left, right = "/*", "*/"
+        if ft == "html" or ft == "xml" or ft == "markdown" then
+          left, right = "<!--", "-->"
+        elseif ft == "lua" then
+          left, right = "--[[", "]]"
+        elseif ft == "python" then
+          left, right = '"""', '"""'
+        end
 
-      -- Multiline selection comment toggle (Visual & Select modes)
-      map("x", "<C-/>", function() _G.ToggleComment("x") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
-      map("x", "<C-_>", function() _G.ToggleComment("x") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
-      map("s", "<C-/>", function() _G.ToggleComment("s") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
-      map("s", "<C-_>", function() _G.ToggleComment("s") end, { desc = "Toggle Comment (VS Code Ctrl+/)" })
+        local s_line = vim.fn.line(".")
+        local e_line = s_line
+        if mode == "x" or mode == "s" then
+          vim.cmd("normal! \27")
+          s_line = vim.fn.getpos("'<")[2]
+          e_line = vim.fn.getpos("'>")[2]
+          if s_line > e_line then s_line, e_line = e_line, s_line end
+        end
+
+        if s_line <= 0 then s_line = 1 end
+        if e_line <= 0 then e_line = s_line end
+
+        local lines = vim.api.nvim_buf_get_lines(0, s_line - 1, e_line, false)
+        if #lines == 0 then return end
+
+        local first = lines[1]
+        local last = lines[#lines]
+        local p_left = vim.pesc(left)
+        local p_right = vim.pesc(right)
+
+        if first:match("^%s*" .. p_left) and last:match(p_right .. "%s*$") then
+          lines[1] = first:gsub("^%s*" .. p_left .. "%s?", "")
+          lines[#lines] = last:gsub("%s?" .. p_right .. "%s*$", "")
+        else
+          lines[1] = left .. " " .. lines[1]
+          lines[#lines] = lines[#lines] .. " " .. right
+        end
+
+        vim.api.nvim_buf_set_lines(0, s_line - 1, e_line, false, lines)
+
+        if mode == "x" or mode == "s" then
+          vim.cmd("normal! gv")
+          if mode == "s" then
+            vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-g>", true, false, true), "n", false)
+          end
+        elseif mode == "i" then
+          vim.cmd("startinsert")
+        end
+      end
+
+      -- Backward-compatibility bridge
+      _G.ToggleComment = _G.ToggleLineComment
+
+      local map = vim.keymap.set
+
+      -- 1. Single-line & Multiline Line Comment Toggle (VS Code Ctrl+/ and macOS Cmd+/)
+      local line_keys = { "<C-/>", "<C-_>", "<D-/>" }
+      for _, key in ipairs(line_keys) do
+        map("n", key, function() _G.ToggleLineComment("n") end, { desc = "Toggle Line Comment (Ctrl+/)" })
+        map("i", key, function() _G.ToggleLineComment("i") end, { desc = "Toggle Line Comment (Ctrl+/)" })
+        map("x", key, function() _G.ToggleLineComment("x") end, { desc = "Toggle Line Comment (Ctrl+/)" })
+        map("s", key, function() _G.ToggleLineComment("s") end, { desc = "Toggle Line Comment (Ctrl+/)" })
+      end
 
       -- VS Code chord aliases (Ctrl+K Ctrl+C)
-      map({ "n", "i", "x", "s" }, "<C-k><C-c>", function() _G.ToggleComment(vim.fn.mode()) end, { desc = "Toggle Comment (Ctrl+K Ctrl+C)" })
-      map({ "n", "i", "x", "s" }, "<C-k><C-C>", function() _G.ToggleComment(vim.fn.mode()) end, { desc = "Toggle Comment (Ctrl+K Ctrl+C)" })
+      map({ "n", "i", "x", "s" }, "<C-k><C-c>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Toggle Line Comment (Ctrl+K Ctrl+C)" })
+      map({ "n", "i", "x", "s" }, "<C-k><C-C>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Toggle Line Comment (Ctrl+K Ctrl+C)" })
+      map({ "n", "i", "x", "s" }, "<C-k><C-u>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Uncomment Line (Ctrl+K Ctrl+U)" })
+      map({ "n", "i", "x", "s" }, "<C-k><C-U>", function() _G.ToggleLineComment(vim.fn.mode()) end, { desc = "Uncomment Line (Ctrl+K Ctrl+U)" })
+
+      -- 2. Block Comment Toggle (VS Code Shift+Alt+A / Option+Shift+A)
+      local block_keys = { "<M-S-A>", "<M-S-a>", "<A-S-A>", "<A-S-a>", "<D-A-A>", "<D-A-a>" }
+      for _, key in ipairs(block_keys) do
+        map({ "n", "i", "x", "s" }, key, function() _G.ToggleBlockComment(vim.fn.mode()) end, { desc = "Toggle Block Comment (Shift+Alt+A)" })
+      end
     end,
   },
 
