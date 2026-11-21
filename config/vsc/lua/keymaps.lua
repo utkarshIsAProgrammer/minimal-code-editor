@@ -700,6 +700,92 @@ function _G.CreateNewDirectory()
   end)
 end
 
+-- -------------------------------------------------------------------
+-- Terminal Client Integration (Zero Nested Instances)
+-- -------------------------------------------------------------------
+function _G.FocusEditorFromTerminal()
+  pcall(function()
+    local ok, snacks = pcall(require, "snacks")
+    if ok and snacks.terminal then
+      local ft = vim.bo.filetype
+      local bt = vim.bo.buftype
+      if ft == "snacks_terminal" or bt == "terminal" then
+        snacks.terminal.toggle()
+      end
+    end
+  end)
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local bt = vim.bo[buf].buftype
+    local ft = vim.bo[buf].filetype
+    if bt == "" and ft ~= "snacks_explorer" and not ft:find("snacks_picker") then
+      vim.api.nvim_set_current_win(win)
+      break
+    end
+  end
+  return "OK"
+end
+
+function _G.OpenFileFromTerminal(target_path)
+  if not target_path or target_path == "" then
+    return _G.FocusEditorFromTerminal()
+  end
+  local full = vim.fn.fnamemodify(vim.fn.expand(target_path), ":p")
+
+  -- If target is a directory, change workspace
+  if vim.fn.isdirectory(full) == 1 then
+    vim.fn.chdir(full)
+    if _G.AddRecentFolder then _G.AddRecentFolder(full) end
+    pcall(function()
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.explorer then
+        snacks.explorer({ cwd = full })
+      end
+    end)
+    vim.notify("✓ Switched workspace: " .. full, vim.log.levels.INFO, { title = "Terminal Workspace" })
+    return "OK"
+  end
+
+  -- Target is a file: track in recents
+  local parent = vim.fn.fnamemodify(full, ":h")
+  if vim.fn.isdirectory(parent) == 1 and _G.AddRecentFolder then
+    _G.AddRecentFolder(parent)
+  end
+  if _G.AddRecentFile then _G.AddRecentFile(full) end
+
+  -- If terminal overlay is visible, toggle it to reveal editor
+  pcall(function()
+    local ok, snacks = pcall(require, "snacks")
+    if ok and snacks.terminal then
+      local ft = vim.bo.filetype
+      local bt = vim.bo.buftype
+      if ft == "snacks_terminal" or bt == "terminal" then
+        snacks.terminal.toggle()
+      end
+    end
+  end)
+
+  -- Switch focus to a regular editable window
+  local target_win = nil
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local bt = vim.bo[buf].buftype
+    local ft = vim.bo[buf].filetype
+    if bt == "" and ft ~= "snacks_explorer" and not ft:find("snacks_picker") then
+      target_win = win
+      break
+    end
+  end
+
+  if target_win then
+    vim.api.nvim_set_current_win(target_win)
+  end
+
+  vim.cmd("edit " .. vim.fn.fnameescape(full))
+  vim.notify("✓ Opened: " .. vim.fn.fnamemodify(full, ":t"), vim.log.levels.INFO, { title = "Editor" })
+  return "OK"
+end
+
 function _G.OpenFolderPicker(target_dir)
   local ok_snacks, snacks = pcall(require, "snacks")
 
@@ -743,113 +829,264 @@ function _G.OpenFolderPicker(target_dir)
     return
   end
 
-  local has_fd = vim.fn.executable("fd") == 1
+  local uv = vim.uv or vim.loop
   local home = vim.env.HOME or vim.env.USERPROFILE or "."
+  local has_fd = vim.fn.executable("fd") == 1
 
-  local function get_target_from_picker(picker, item)
-    local dir = nil
-    if item and (item.file or item.text) then
-      dir = item.file or item.text
-    end
-    if (not dir or dir == "") and picker and picker.input then
-      local p_text = pcall(function() return picker.input:get() end) and picker.input:get()
-      if p_text and p_text ~= "" then
-        dir = p_text
-      end
-    end
-    if (not dir or dir == "") and picker then
-      local filter = pcall(function() return picker:filter() end) and picker:filter()
-      if filter and (filter.pattern or filter.search) then
-        dir = filter.pattern or filter.search
-      end
-    end
-    return dir
-  end
-
-  if has_fd then
-    snacks.picker({
-      title = "Open Project / Folder (select or type path)",
-      finder = function(opts, ctx)
-        return require("snacks.picker.source.proc").proc(
-          ctx:opts({
-            cmd = "fd",
-            args = {
-              "--type", "d",
-              "--max-depth", "3",
-              "--color", "never",
-              "-E", ".*",
-              "-E", "node_modules",
-              "-E", "target",
-              "-E", "build",
-              "-E", "dist",
-              "-E", "vendor",
-              "-E", "__pycache__",
-              ".",
-              home,
-            },
-            transform = function(item)
-              item.file = item.text
-              item.dir = true
-            end,
-          }),
-          ctx
-        )
-      end,
-      format = "file",
-      confirm = function(picker, item)
-        local dir = get_target_from_picker(picker, item)
-        picker:close()
-        do_open_dir(dir)
-      end,
-    })
-  else
-    -- Pure Lua fallback for vanilla Windows, macOS, or systems without fd
-    local uv = vim.uv or vim.loop
+  local function scan_directory(base_dir, pattern)
     local items = {}
     local seen = {}
 
-    local function add_dir(d)
-      if not d or d == "" or seen[d] then return end
-      seen[d] = true
-      table.insert(items, { text = d, file = d, dir = true })
+    -- Parent directory navigation
+    local parent_dir = vim.fn.fnamemodify(base_dir, ":h")
+    if parent_dir and parent_dir ~= "" and parent_dir ~= base_dir then
+      table.insert(items, {
+        text = ".. (Parent: " .. vim.fn.fnamemodify(parent_dir, ":~") .. ")",
+        file = parent_dir,
+        dir = true,
+        is_parent = true,
+      })
+      seen[parent_dir] = true
     end
 
-    add_dir(vim.fn.getcwd())
-    if _G.RecentWorkspaces then
-      for _, w in ipairs(_G.RecentWorkspaces) do add_dir(w) end
-    end
+    local dirs = {}
+    local files = {}
 
-    local function scan(d, depth)
-      if depth > 2 then return end
-      local handle = uv.fs_scandir(d)
-      if not handle then return end
+    local handle = uv.fs_scandir(base_dir)
+    if handle then
       while true do
         local name, type = uv.fs_scandir_next(handle)
         if not name then break end
-        if type == "directory" and not name:match("^%.") and name ~= "node_modules" and name ~= "target" and name ~= "build" and name ~= "dist" then
-          local full = d .. "/" .. name
-          add_dir(full)
-          scan(full, depth + 1)
+
+        local is_dot = name:sub(1, 1) == "."
+        local allow = true
+        if is_dot and (not pattern or pattern:sub(1, 1) ~= ".") then
+          allow = false
+        end
+        if name == "node_modules" or name == ".git" or name == ".cache" or name == ".local" then
+          allow = false
+        end
+
+        if allow then
+          local full_path = base_dir .. "/" .. name
+          local match = true
+          if pattern and pattern ~= "" then
+            match = name:lower():find(pattern, 1, true) ~= nil
+          end
+          if match then
+            seen[full_path] = true
+            if type == "directory" then
+              table.insert(dirs, {
+                text = name .. "/",
+                file = full_path,
+                dir = true,
+              })
+            else
+              table.insert(files, {
+                text = name,
+                file = full_path,
+                dir = false,
+              })
+            end
+          end
         end
       end
     end
 
-    scan(vim.fn.getcwd(), 1)
-    if home and home ~= "." and home ~= "" then
-      scan(home, 1)
+    table.sort(dirs, function(a, b) return a.text:lower() < b.text:lower() end)
+    table.sort(files, function(a, b) return a.text:lower() < b.text:lower() end)
+
+    for _, d in ipairs(dirs) do table.insert(items, d) end
+    for _, f in ipairs(files) do table.insert(items, f) end
+
+    -- If searching for a pattern and direct children yielded few/no results, search recursively via fd
+    if pattern and pattern ~= "" and #dirs == 0 and #files == 0 and has_fd then
+      local fd_cmd = string.format("fd --max-depth 4 --color never -E .git -E node_modules -E .cache %s %s 2>/dev/null", vim.fn.shellescape(pattern), vim.fn.shellescape(base_dir))
+      local p_handle = io.popen(fd_cmd)
+      if p_handle then
+        for line in p_handle:lines() do
+          line = vim.trim(line)
+          if line ~= "" and not seen[line] then
+            seen[line] = true
+            local is_d = vim.fn.isdirectory(line) == 1
+            local rel = vim.fn.fnamemodify(line, ":~:.")
+            if is_d then
+              if not rel:match("/$") then rel = rel .. "/" end
+              table.insert(items, { text = rel, file = line, dir = true })
+            else
+              table.insert(items, { text = rel, file = line, dir = false })
+            end
+          end
+        end
+        p_handle:close()
+      end
     end
 
-    snacks.picker({
-      title = "Open Project / Folder (select or type path)",
-      items = items,
-      format = "file",
-      confirm = function(picker, item)
-        local dir = get_target_from_picker(picker, item)
-        picker:close()
-        do_open_dir(dir)
-      end,
-    })
+    return items
   end
+
+  local function drill_into(picker, path)
+    if not path or path == "" then return end
+    path = vim.fn.expand(path)
+    if not path:match("/$") then path = path .. "/" end
+    local rel = vim.fn.fnamemodify(path, ":~:.")
+    if not rel:match("/$") then rel = rel .. "/" end
+    picker.input:set(rel)
+    picker:find({ refresh = false })
+    if picker.input and picker.input.win and picker.input.win:valid() then
+      picker.input.win:focus()
+      vim.cmd("startinsert!")
+    end
+  end
+
+  snacks.picker({
+    title = "Open Project / Folder / File (Tab/Right to browse, Enter to open)",
+    live = true,
+    format = "file",
+    finder = function(opts, ctx)
+      local raw_query = ctx.filter and ctx.filter.search or ""
+      local q = vim.trim(raw_query)
+
+      if q:sub(1, 1) == "~" then
+        q = home .. q:sub(2)
+      end
+
+      local base_dir = nil
+      local pattern = ""
+
+      if q == "" then
+        base_dir = vim.fn.getcwd()
+        pattern = ""
+      elseif vim.fn.isdirectory(q) == 1 and q:match("/$") then
+        base_dir = vim.fn.fnamemodify(q, ":p"):gsub("/+$", "")
+        pattern = ""
+      elseif q:match("/") then
+        local parent = vim.fn.fnamemodify(q, ":h")
+        local leaf = vim.fn.fnamemodify(q, ":t")
+        if vim.fn.isdirectory(parent) == 1 then
+          base_dir = vim.fn.fnamemodify(parent, ":p"):gsub("/+$", "")
+          pattern = leaf:lower()
+        else
+          base_dir = vim.fn.getcwd()
+          pattern = q:lower()
+        end
+      else
+        base_dir = vim.fn.getcwd()
+        pattern = q:lower()
+      end
+
+      base_dir = vim.fn.expand(base_dir)
+
+      return function(cb)
+        local items = scan_directory(base_dir, pattern)
+
+        -- If at initial empty root, also append recent workspaces and standard project folders
+        if q == "" then
+          if _G.RecentWorkspaces and #_G.RecentWorkspaces > 0 then
+            for _, rw in ipairs(_G.RecentWorkspaces) do
+              if vim.fn.isdirectory(rw) == 1 and rw ~= base_dir then
+                table.insert(items, {
+                  text = "Recent: " .. vim.fn.fnamemodify(rw, ":~") .. "/",
+                  file = rw,
+                  dir = true,
+                })
+              end
+            end
+          end
+
+          local common = { home .. "/Projects", home .. "/Documents", home .. "/Desktop", home .. "/Downloads" }
+          for _, c in ipairs(common) do
+            if vim.fn.isdirectory(c) == 1 and c ~= base_dir then
+              table.insert(items, {
+                text = vim.fn.fnamemodify(c, ":~") .. "/",
+                file = c,
+                dir = true,
+              })
+            end
+          end
+        end
+
+        for _, it in ipairs(items) do
+          cb(it)
+        end
+      end
+    end,
+    actions = {
+      open_or_drill = function(picker, item)
+        item = item or picker:current()
+        if not item then
+          local text = picker.input:get()
+          picker:close()
+          do_open_dir(text)
+          return
+        end
+
+        if item.is_parent then
+          drill_into(picker, item.file)
+          return
+        end
+
+        if item.dir or (item.file and vim.fn.isdirectory(item.file) == 1) then
+          picker:close()
+          do_open_dir(item.file)
+        else
+          -- File selected: open directly in editor
+          picker:close()
+          local full = item.file
+          local parent = vim.fn.fnamemodify(full, ":h")
+          if vim.fn.isdirectory(parent) == 1 and _G.AddRecentFolder then
+            _G.AddRecentFolder(parent)
+          end
+          if _G.AddRecentFile then _G.AddRecentFile(full) end
+          vim.cmd("edit " .. vim.fn.fnameescape(full))
+          vim.notify("✓ Opened: " .. vim.fn.fnamemodify(full, ":t"), vim.log.levels.INFO, { title = "Open File" })
+        end
+      end,
+      drill_down = function(picker, item)
+        item = item or picker:current()
+        if item and (item.dir or item.is_parent or (item.file and vim.fn.isdirectory(item.file) == 1)) then
+          drill_into(picker, item.file)
+        elseif item and item.file then
+          picker.input:set(item.file)
+          picker:find({ refresh = false })
+        end
+      end,
+      go_up = function(picker)
+        local text = picker.input:get()
+        if text and text ~= "" then
+          local clean = text:gsub("/+$", "")
+          local parent = vim.fn.fnamemodify(clean, ":h")
+          if parent and parent ~= "" and parent ~= "." then
+            if not parent:match("/$") then parent = parent .. "/" end
+            local rel = vim.fn.fnamemodify(parent, ":~:.")
+            if not rel:match("/$") then rel = rel .. "/" end
+            picker.input:set(rel)
+          else
+            picker.input:set("")
+          end
+          picker:find({ refresh = false })
+        end
+      end,
+    },
+    confirm = "open_or_drill",
+    win = {
+      input = {
+        keys = {
+          ["<Tab>"] = { "drill_down", mode = { "i", "n" } },
+          ["<Right>"] = { "drill_down", mode = { "i", "n" } },
+          ["<Left>"] = { "go_up", mode = { "i", "n" } },
+        },
+      },
+      list = {
+        keys = {
+          ["<Tab>"] = { "drill_down", mode = { "n", "i", "x" } },
+          ["<Right>"] = { "drill_down", mode = { "n", "i", "x" } },
+          ["<Left>"] = { "go_up", mode = { "n", "i", "x" } },
+          ["<CR>"] = { "open_or_drill", mode = { "n", "i", "x" } },
+        },
+      },
+    },
+  })
 end
 _G.OpenProject = _G.OpenFolderPicker
 

@@ -41,6 +41,29 @@ elif [ -x "/Applications/kitty.app/Contents/MacOS/kitty" ]; then
     KITTY_BIN="/Applications/kitty.app/Contents/MacOS/kitty"
 fi
 
+# Check if already running inside Minimal's embedded terminal
+if [ -n "$NVIM" ]; then
+    if [ $# -eq 0 ]; then
+        "$NVIM_BIN" --server "$NVIM" --remote-send "<Esc>:lua _G.FocusEditorFromTerminal()<CR>" >/dev/null 2>&1
+        exit 0
+    fi
+    for arg in "$@"; do
+        case "$arg" in
+            -h|--help|-v|--version)
+                exec "$NVIM_BIN" "$arg"
+                ;;
+            -*)
+                ;;
+            *)
+                FULL_PATH="$(realpath "$arg" 2>/dev/null || readlink -f "$arg" 2>/dev/null || echo "$PWD/$arg")"
+                ESCAPED="${FULL_PATH//\'/\\\'}"
+                "$NVIM_BIN" --server "$NVIM" --remote-send "<Esc>:lua _G.OpenFileFromTerminal('$ESCAPED')<CR>" >/dev/null 2>&1
+                ;;
+        esac
+    done
+    exit 0
+fi
+
 # Launch in Kitty if available and not already inside a Kitty window
 if [ -n "$KITTY_BIN" ] && [ -z "$KITTY_WINDOW_ID" ] && [ -t 0 ]; then
     if [ -f "$KITTY_CONF" ]; then

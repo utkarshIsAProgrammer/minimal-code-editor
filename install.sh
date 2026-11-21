@@ -137,6 +137,7 @@ mkdir -p "$XDG_DATA_HOME/applications"
 
 # Copy Neovim VSC config
 cp -rf "$SRC_DIR"/config/vsc/* "$XDG_CONFIG_HOME/vsc/"
+chmod +x "$XDG_CONFIG_HOME/vsc/bin/"* 2>/dev/null || true
 echo -e "  ${GREEN}✔${RESET} Isolated Neovim config installed to ${CYAN}$XDG_CONFIG_HOME/vsc/${RESET}"
 
 # Copy Kitty config

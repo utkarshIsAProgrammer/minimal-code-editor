@@ -6,6 +6,18 @@ set "NVIM_APPNAME=vsc"
 if /I "%~1"=="update" goto :self_update
 if /I "%~1"=="--update" goto :self_update
 
+:: Check if already running inside Minimal's embedded terminal
+if defined NVIM (
+    if "%~1"=="" (
+        nvim --server "%NVIM%" --remote-send "<Esc>:lua _G.FocusEditorFromTerminal()<CR>" >nul 2>&1
+        exit /b 0
+    )
+    for %%A in (%*) do (
+        nvim --server "%NVIM%" --remote-send "<Esc>:lua _G.OpenFileFromTerminal('%%~fA')<CR>" >nul 2>&1
+    )
+    exit /b 0
+)
+
 :: 1. Search PATH first
 set "NVIM_EXE="
 where nvim.exe >nul 2>&1
