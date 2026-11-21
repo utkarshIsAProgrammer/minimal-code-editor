@@ -12,51 +12,44 @@ local map = vim.keymap.set
 -- ===================================================================
 
 -- -------------------------------------------------------------------
--- 1. Modeless Typing: Auto-Enter Insert Mode in Editable Documents
+-- 1. 100% Modeless Typing: Pure Non-Modal Editor (Zero Normal Mode)
 -- -------------------------------------------------------------------
 _G.skip_insert_autocmd = false
-_G.user_normal_mode = false
 
-vim.api.nvim_create_autocmd("InsertEnter", {
-  callback = function()
-    _G.user_normal_mode = false
-  end,
-  desc = "Track user entering write mode",
-})
+local function ensure_insert_mode(buf)
+  if _G.skip_insert_autocmd then return end
+  buf = buf or vim.api.nvim_get_current_buf()
+  if not (vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == "" and vim.bo[buf].modifiable) then
+    return
+  end
+  local ft = vim.bo[buf].filetype
+  if ft == "snacks_dashboard" or ft:find("dashboard") or ft:find("picker") or ft:find("snacks") then
+    return
+  end
+  local name = vim.api.nvim_buf_get_name(buf)
+  if vim.fn.argc() == 0 and (name == "" or name == nil) and vim.api.nvim_buf_line_count(buf) <= 1 then
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, 1, false)
+    if #lines == 0 or lines[1] == "" then
+      return
+    end
+  end
+  vim.schedule(function()
+    if vim.api.nvim_buf_is_valid(buf)
+      and vim.bo[buf].buftype == ""
+      and vim.bo[buf].modifiable
+      and vim.bo[buf].filetype ~= "snacks_dashboard"
+      and not vim.bo[buf].filetype:find("picker")
+    then
+      vim.cmd("startinsert")
+    end
+  end)
+end
 
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "InsertLeave", "FocusGained" }, {
   callback = function(args)
-    if _G.skip_insert_autocmd or _G.user_normal_mode then return end
-    local buf = args.buf
-    if not (vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == "" and vim.bo[buf].modifiable) then
-      return
-    end
-    local ft = vim.bo[buf].filetype
-    if ft == "snacks_dashboard" or ft:find("dashboard") or ft:find("picker") or ft:find("snacks") then
-      vim.cmd("stopinsert")
-      return
-    end
-    -- If Neovim started with no arguments and this buffer is empty/unnamed, do not force insert mode (homescreen displays)
-    local name = vim.api.nvim_buf_get_name(buf)
-    if vim.fn.argc() == 0 and (name == "" or name == nil) and vim.api.nvim_buf_line_count(buf) <= 1 then
-      local lines = vim.api.nvim_buf_get_lines(buf, 0, 1, false)
-      if #lines == 0 or lines[1] == "" then
-        return
-      end
-    end
-    vim.schedule(function()
-      if _G.skip_insert_autocmd or _G.user_normal_mode then return end
-      if vim.api.nvim_buf_is_valid(buf)
-        and vim.bo[buf].buftype == ""
-        and vim.bo[buf].modifiable
-        and vim.bo[buf].filetype ~= "snacks_dashboard"
-        and not vim.bo[buf].filetype:find("picker")
-      then
-        vim.cmd("startinsert")
-      end
-    end)
+    ensure_insert_mode(args.buf)
   end,
-  desc = "Maintain typing mode in editable files",
+  desc = "Maintain 100% Modeless Typing in all editable documents",
 })
 
 -- -------------------------------------------------------------------
@@ -113,14 +106,9 @@ map("n", "<Del>", function()
 end, { expr = true, silent = true })
 
 -- -------------------------------------------------------------------
--- 3. Escape Key: Closes pickers, popups & enters genuine Normal/Vim mode
+-- 3. Escape Key: Closes pickers, popups & suggestions (100% Modeless)
 -- -------------------------------------------------------------------
 local function handle_escape()
-  -- Prevent autocommands from forcing insert mode back on
-  _G.user_normal_mode = true
-  _G.skip_insert_autocmd = true
-  vim.defer_fn(function() _G.skip_insert_autocmd = false end, 300)
-
   vim.cmd("nohlsearch")
 
   -- Close mouse hover popup if open
@@ -144,13 +132,9 @@ local function handle_escape()
         if menu.win and menu.win:is_open() then menu.win:close() end
       end
       local docs = require("blink.cmp.completion.windows.documentation")
-      if docs and docs.win and docs.win:is_open() then
-        docs.win:close()
-      end
+      if docs and docs.win and docs.win:is_open() then docs.win:close() end
       local sig = require("blink.cmp.signature.window")
-      if sig and sig.win and sig.win:is_open() then
-        sig.win:close()
-      end
+      if sig and sig.win and sig.win:is_open() then sig.win:close() end
     end)
   end
 
@@ -176,9 +160,8 @@ local function handle_escape()
   local bt = vim.bo[cur_buf].buftype
   local win_cfg = vim.api.nvim_win_get_config(cur_win)
 
-  -- On dashboard: ensure Normal mode and keep dashboard intact
+  -- On dashboard: keep dashboard intact
   if ft == "snacks_dashboard" or ft:find("dashboard") then
-    vim.cmd("stopinsert")
     return
   end
 
@@ -216,22 +199,20 @@ local function handle_escape()
     end
   end
 
-  -- In regular editing buffer: enter genuine Normal mode synchronously so : never leaks into file
+  -- If in selection mode (visual/select), cancel selection and stay in typing mode
   local m = vim.fn.mode()
   if m == "s" or m == "x" or m == "v" or m == "V" or m == "\22" then
     vim.cmd("normal! \27")
+    vim.cmd("startinsert")
+    return
   end
-  vim.cmd("stopinsert")
-  vim.cmd("nohlsearch")
-  vim.schedule(function()
-    if vim.fn.mode() == "n" then
-      vim.api.nvim_echo({ { "󰅪 NORMAL", "ModeMsg" }, { " • Press 'i' to edit", "Comment" } }, false, {})
-    end
-  end)
+
+  -- Pure Modeless: ALWAYS remain in Insert/Typing mode (Zero Normal Mode)
+  vim.cmd("startinsert")
 end
 
-map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { nowait = true, desc = "Enter Normal Mode / Close Menus (Esc)" })
-map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { nowait = true, desc = "Enter Normal Mode / Close Menus (Shift+Esc)" })
+map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { nowait = true, desc = "Close Menus & Popups (100% Modeless Esc)" })
+map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { nowait = true, desc = "Close Menus & Popups (100% Modeless Shift+Esc)" })
 _G.handle_escape = handle_escape
 
 
@@ -1382,23 +1363,74 @@ local function delete_word_right()
   vim.api.nvim_win_set_cursor(0, { row, col })
 end
 
--- Delete Word Left (Ctrl+Backspace / Alt+Backspace)
-map("i", "<C-BS>", "<C-w>", { remap = false, desc = "Delete Word Left (Ctrl+Backspace)" })
-map("i", "<M-BS>", "<C-w>", { remap = false, desc = "Delete Word Left (Alt+Backspace)" })
-map({ "n", "x" }, "<C-BS>", "db", { remap = false, desc = "Delete Word Left (Ctrl+Backspace)" })
-map({ "n", "x" }, "<M-BS>", "db", { remap = false, desc = "Delete Word Left (Alt+Backspace)" })
+-- Direct buffer word deletion (100% safe, never closes files or touches normal mode)
+local function delete_word_left()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row, col = cursor[1], cursor[2]
+  if col == 0 then
+    if row > 1 then
+      local prev_line = vim.api.nvim_buf_get_lines(0, row - 2, row - 1, false)[1]
+      local cur_line = vim.api.nvim_get_current_line()
+      vim.api.nvim_buf_set_lines(0, row - 2, row, false, { prev_line .. cur_line })
+      vim.api.nvim_win_set_cursor(0, { row - 1, #prev_line })
+    end
+    return
+  end
+  local line = vim.api.nvim_get_current_line()
+  local before = line:sub(1, col)
+  local new_before = before:gsub("%s*[%w_]+$", "")
+  if new_before == before then
+    new_before = before:gsub("%s*[^%w%s_]+$", "")
+  end
+  if new_before == before then
+    new_before = before:gsub("%s+$", "")
+  end
+  if new_before == before and #before > 0 then
+    new_before = before:sub(1, #before - 1)
+  end
+  local new_line = new_before .. line:sub(col + 1)
+  vim.api.nvim_set_current_line(new_line)
+  vim.api.nvim_win_set_cursor(0, { row, #new_before })
+end
 
--- Delete Word Right (Ctrl+Delete / Alt+Delete)
-map("i", "<C-Del>", "<C-o>de", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
-map("i", "<C-Delete>", "<C-o>de", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
-map("i", "<M-Del>", "<C-o>de", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
-map("i", "<M-Delete>", "<C-o>de", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
-map("i", "<M-d>", "<C-o>de", { remap = false, desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
-map({ "n", "x" }, "<C-Del>", "dw", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
-map({ "n", "x" }, "<C-Delete>", "dw", { remap = false, desc = "Delete Word Right (Ctrl+Delete)" })
-map({ "n", "x" }, "<M-Del>", "dw", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
-map({ "n", "x" }, "<M-Delete>", "dw", { remap = false, desc = "Delete Word Right (Alt+Delete)" })
-map({ "n", "x" }, "<M-d>", "dw", { remap = false, desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
+local function delete_word_right()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row, col = cursor[1], cursor[2]
+  local line = vim.api.nvim_get_current_line()
+  if col >= #line then
+    local total_rows = vim.api.nvim_buf_line_count(0)
+    if row < total_rows then
+      local next_line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
+      vim.api.nvim_buf_set_lines(0, row - 1, row + 1, false, { line .. next_line })
+    end
+    return
+  end
+  local after = line:sub(col + 1)
+  local new_after = after:gsub("^%s*[%w_]+", "")
+  if new_after == after then
+    new_after = after:gsub("^%s*[^%w%s_]+", "")
+  end
+  if new_after == after then
+    new_after = after:gsub("^%s+", "")
+  end
+  if new_after == after and #after > 0 then
+    new_after = after:sub(2)
+  end
+  local new_line = line:sub(1, col) .. new_after
+  vim.api.nvim_set_current_line(new_line)
+  vim.api.nvim_win_set_cursor(0, { row, col })
+end
+
+map({ "i", "n", "x", "s" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
+map({ "i", "n", "x", "s" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
+map({ "i", "n", "x", "s" }, "\27[127;5u", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace CSI u)" })
+
+map({ "i", "n", "x", "s" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
+map({ "i", "n", "x", "s" }, "<C-Delete>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
+map({ "i", "n", "x", "s" }, "\27[3;5~", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete CSI u)" })
+map({ "i", "n", "x", "s" }, "<M-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
+map({ "i", "n", "x", "s" }, "<M-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
+map({ "i", "n", "x", "s" }, "<M-d>", delete_word_right, { desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
 
 -- -------------------------------------------------------------------
 -- 13. Line Manipulation (Alt+Up/Down, Shift+Alt+Down, Enter lines)
@@ -1455,19 +1487,23 @@ map("x", "<M-S-Down>", ":t '><cr>gv", { desc = "Duplicate Selection Down (VS Cod
 map("x", "<A-S-Down>", ":t '><cr>gv", { desc = "Duplicate Selection Down (VS Code Shift+Alt+Down)" })
 
 local function insert_line_below()
-  if vim.fn.mode():match("^[iR]") then
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>o", true, false, true), "n", false)
-  else
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("o", true, false, true), "n", false)
-  end
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row = cursor[1]
+  local cur_line = vim.api.nvim_get_current_line()
+  local indent = cur_line:match("^%s*") or ""
+  vim.api.nvim_buf_set_lines(0, row, row, false, { indent })
+  vim.api.nvim_win_set_cursor(0, { row + 1, #indent })
+  vim.cmd("startinsert!")
 end
 
 local function insert_line_above()
-  if vim.fn.mode():match("^[iR]") then
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>O", true, false, true), "n", false)
-  else
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("O", true, false, true), "n", false)
-  end
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row = cursor[1]
+  local cur_line = vim.api.nvim_get_current_line()
+  local indent = cur_line:match("^%s*") or ""
+  vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { indent })
+  vim.api.nvim_win_set_cursor(0, { row, #indent })
+  vim.cmd("startinsert!")
 end
 
 map({ "n", "i" }, "<C-CR>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
@@ -1477,6 +1513,8 @@ map({ "n", "i" }, "\27[13;5u", insert_line_below, { desc = "Insert Line Below (C
 map({ "n", "i" }, "<C-S-CR>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
 map({ "n", "i" }, "<C-S-Enter>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
 map({ "n", "i" }, "\27[13;6u", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter CSI u)" })
+map({ "n", "i" }, "<M-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
+map({ "n", "i" }, "<A-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
 
 map({ "x", "s" }, "<Tab>", function()
   vim.cmd("normal! \27gv>gv")

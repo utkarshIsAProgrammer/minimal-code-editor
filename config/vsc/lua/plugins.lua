@@ -95,25 +95,8 @@ return {
       sections = {
         lualine_a = {
           {
-            "mode",
-            fmt = function(str)
-              if vim.bo.filetype == "snacks_dashboard" then
-                return "󰅪 MINIMAL"
-              end
-              local mode_map = {
-                ["NORMAL"] = "󰅪 NORMAL",
-                ["INSERT"] = "󰏫 INSERT",
-                ["VISUAL"] = "󰈈 VISUAL",
-                ["V-LINE"] = "󰈈 V-LINE",
-                ["V-BLOCK"] = "󰈈 V-BLOCK",
-                ["SELECT"] = "󰒅 SELECT",
-                ["S-LINE"] = "󰒅 S-LINE",
-                ["S-BLOCK"] = "󰒅 S-BLOCK",
-                ["REPLACE"] = "󰛔 REPLACE",
-                ["COMMAND"] = "󰘳 COMMAND",
-                ["TERMINAL"] = "󰞷 TERMINAL",
-              }
-              return mode_map[str] or ("󰅪 " .. (str or ""))
+            function()
+              return "󰅪 MINIMAL"
             end,
             separator = { left = "", right = "" },
           },
@@ -519,7 +502,7 @@ return {
     },
     opts = {
       enabled = function()
-        return vim.api.nvim_get_mode().mode:match("^[is]") ~= nil and not _G.user_normal_mode
+        return vim.bo.buftype == "" and vim.bo.modifiable
       end,
       keymap = {
         preset = "super-tab",
