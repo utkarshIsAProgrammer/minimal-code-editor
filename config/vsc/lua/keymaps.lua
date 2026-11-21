@@ -2457,14 +2457,14 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 -- VS Code Standard Theme Picker: Ctrl+K Ctrl+T
 map({ "n", "i" }, "<C-k><C-t>", function() _G.SelectThemePicker() end, { desc = "Color Theme Picker (VS Code Ctrl+K Ctrl+T)" })
 
--- Quick Theme Toggle: F10 (cycles Dark Magic -> Nerd Dark -> Cyber Aurora)
+-- Quick Theme Toggle: F10 (toggles Dark Magic <-> Cyber Aurora)
 map({ "n", "i" }, "<F10>", function() _G.ToggleTheme() end, { desc = "Toggle Theme (F10)" })
 
 -- User commands
 vim.api.nvim_create_user_command("Theme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
 vim.api.nvim_create_user_command("ColorTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
 vim.api.nvim_create_user_command("SelectTheme", function() _G.SelectThemePicker() end, { desc = "Open Color Theme Picker" })
-vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Cycle between Dark Magic, Nerd Dark, and Cyber Aurora" })
+vim.api.nvim_create_user_command("ToggleTheme", function() _G.ToggleTheme() end, { desc = "Toggle between Dark Magic and Cyber Aurora" })
 
 -- -------------------------------------------------------------------
 -- 24. Native macOS Command Key (Cmd / ⌘) Support

@@ -1,6 +1,6 @@
 -- ===================================================================
 -- Minimal (vsc) - Theme Manager & Persistence
--- Supports Dark Magic, Nerd Dark, Cyber Aurora, Catppuccin, etc.
+-- Exclusively includes Dark Magic and Cyber Aurora
 -- ===================================================================
 
 local M = {}
@@ -16,34 +16,10 @@ M.themes = {
     icon = "🔮 ",
   },
   {
-    name = "nerddark",
-    label = "Nerd Dark",
-    desc = "Old-school Hacker / Kanagawa & Gruvbox (#07070f)",
-    icon = "🌿 ",
-  },
-  {
     name = "cyberaurora",
     label = "Cyber Aurora",
     desc = "High-contrast Electric Aurora on Deep Midnight",
-    icon = "❄️ ",
-  },
-  {
-    name = "catppuccin",
-    label = "Catppuccin Mocha",
-    desc = "Soothing pastel dark palette",
-    icon = "🐱 ",
-  },
-  {
-    name = "habamax",
-    label = "Habamax",
-    desc = "Clean minimalist high-contrast dark",
-    icon = "🌙 ",
-  },
-  {
-    name = "retrobox",
-    label = "Retrobox",
-    desc = "Warm retro dark theme",
-    icon = "🪵 ",
+    icon = "🌌 ",
   },
 }
 
@@ -53,8 +29,10 @@ function M.get_current_theme()
     local lines = vim.fn.readfile(theme_file)
     if lines and lines[1] and lines[1]:match("%S") then
       local saved = vim.trim(lines[1])
-      if vim.fn.empty(vim.fn.globpath(vim.o.runtimepath, "colors/" .. saved .. ".*")) == 0 then
-        return saved
+      for _, t in ipairs(M.themes) do
+        if t.name == saved then
+          return saved
+        end
       end
     end
   end
@@ -93,17 +71,10 @@ function M.set_theme(theme_name, notify)
   end
 end
 
--- Cycle through the 3 primary handcrafted themes (Dark Magic -> Nerd Dark -> Cyber Aurora)
+-- Toggle between Dark Magic and Cyber Aurora (F10)
 function M.toggle()
   local current = vim.g.colors_name or M.get_current_theme()
-  local cycle = { "darkmagic", "nerddark", "cyberaurora" }
-  local next_theme = cycle[1]
-  for i, name in ipairs(cycle) do
-    if name == current then
-      next_theme = cycle[(i % #cycle) + 1]
-      break
-    end
-  end
+  local next_theme = (current == "darkmagic") and "cyberaurora" or "darkmagic"
   M.set_theme(next_theme, true)
 end
 
