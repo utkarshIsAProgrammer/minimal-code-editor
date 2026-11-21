@@ -230,8 +230,8 @@ local function handle_escape()
   end)
 end
 
-map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { desc = "Enter Normal Mode / Close Menus (Esc)" })
-map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { desc = "Enter Normal Mode / Close Menus (Shift+Esc)" })
+map({ "n", "i", "s", "x" }, "<Esc>", handle_escape, { nowait = true, desc = "Enter Normal Mode / Close Menus (Esc)" })
+map({ "n", "i", "s", "x" }, "<S-Esc>", handle_escape, { nowait = true, desc = "Enter Normal Mode / Close Menus (Shift+Esc)" })
 _G.handle_escape = handle_escape
 
 

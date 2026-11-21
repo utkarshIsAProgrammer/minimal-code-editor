@@ -526,6 +526,8 @@ return {
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = {
           function(cmp)
+            pcall(cmp.cancel)
+            pcall(cmp.hide)
             if _G.handle_escape then
               _G.handle_escape()
               return true
