@@ -1981,13 +1981,20 @@ map({ "n", "i" }, "<C-S-M>", function() Snacks.picker.diagnostics() end, { desc 
 map({ "n", "i" }, "<C-S-g>", function() Snacks.lazygit() end, { desc = "Git / Source Control (VS Code Ctrl+Shift+G)" })
 map({ "n", "i" }, "<C-S-G>", function() Snacks.lazygit() end, { desc = "Git / Source Control (VS Code Ctrl+Shift+G)" })
 
-local function toggle_terminal()
-  Snacks.terminal(nil, {
-    win = { position = "bottom", height = 0.35 },
-  })
-end
-map({ "n", "i", "t" }, "<C-`>", toggle_terminal, { desc = "Toggle Terminal (VS Code Ctrl+`)" })
-map({ "n", "i", "t" }, "<C-~>", toggle_terminal, { desc = "Toggle Terminal (VS Code Ctrl+~)" })
+map({ "n", "i", "t" }, "<C-`>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (VS Code Ctrl+`)" })
+map({ "n", "i", "t" }, "<C-~>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (VS Code Ctrl+~)" })
+map({ "n", "i" }, "<C-S-t>", function() _G.TerminalNew() end, { desc = "New Terminal Instance (Ctrl+Shift+T)" })
+map({ "n", "i" }, "<D-S-t>", function() _G.TerminalNew() end, { desc = "New Terminal Instance (Cmd+Shift+T)" })
+map({ "n", "i" }, "<M-S-t>", function() _G.TerminalCycleLayout() end, { desc = "Cycle Terminal Layout (Alt+Shift+T)" })
+map({ "n", "i" }, "<C-k>l", function() _G.TerminalCycleLayout() end, { desc = "Cycle Terminal Layout (Ctrl+K L)" })
+map({ "n", "i" }, "<C-k><C-t>", function() _G.TerminalSelectProfile() end, { desc = "Select Terminal Profile (Ctrl+K Ctrl+T)" })
+map({ "n", "i" }, "<C-k>p", function() _G.TerminalSelectInstance() end, { desc = "Select Active Terminal (Ctrl+K P)" })
+
+-- Terminal Drawer Resize (in terminal mode)
+map("t", "<C-Up>", function() _G.TerminalResize(3) end, { desc = "Increase Terminal Height" })
+map("t", "<C-Down>", function() _G.TerminalResize(-3) end, { desc = "Decrease Terminal Height" })
+map("t", "<C-Right>", function() _G.TerminalResize(5) end, { desc = "Increase Terminal Width" })
+map("t", "<C-Left>", function() _G.TerminalResize(-5) end, { desc = "Decrease Terminal Width" })
 
 -- -------------------------------------------------------------------
 -- 18. HTML Boilerplate Snippet (! + Tab / Enter via blink.cmp & friendly-snippets)
@@ -2004,81 +2011,18 @@ vim.api.nvim_create_autocmd("FileType", {
 -- -------------------------------------------------------------------
 -- 19. One-Click Code Runner (Ctrl+' and F5)
 -- -------------------------------------------------------------------
-local function run_current_file()
-  vim.cmd("silent! write")
-  local ft = vim.bo.filetype
-  local file = vim.fn.expand("%:p")
-  local dir = vim.fn.expand("%:p:h")
-  local cmd = nil
-
-  if ft == "python" then
-    cmd = "python3 " .. vim.fn.shellescape(file)
-  elseif ft == "go" then
-    cmd = "go run " .. vim.fn.shellescape(file)
-  elseif ft == "javascript" then
-    cmd = "node " .. vim.fn.shellescape(file)
-  elseif ft == "typescript" then
-    cmd = "npx tsx " .. vim.fn.shellescape(file) .. " || node " .. vim.fn.shellescape(file)
-  elseif ft == "c" then
-    cmd = "gcc -Wall -Wextra -O2 " .. vim.fn.shellescape(file) .. " -o /tmp/c_runner && /tmp/c_runner"
-  elseif ft == "cpp" then
-    cmd = "g++ -std=c++20 -Wall -Wextra -O2 " .. vim.fn.shellescape(file) .. " -o /tmp/cpp_runner && /tmp/cpp_runner"
-  elseif ft == "sh" or ft == "bash" then
-    cmd = "bash " .. vim.fn.shellescape(file)
-  elseif ft == "lua" then
-    cmd = "nvim -l " .. vim.fn.shellescape(file) .. " || lua " .. vim.fn.shellescape(file)
-  elseif ft == "rust" then
-    cmd = "cargo run 2>/dev/null || (rustc " .. vim.fn.shellescape(file) .. " -o /tmp/rust_runner && /tmp/rust_runner)"
-  else
-    vim.notify("No runner configured for filetype: " .. ft, vim.log.levels.WARN, { title = "Code Runner" })
-    return
-  end
-
-  Snacks.terminal(cmd, { cwd = dir })
-end
-
-map({ "n", "i" }, "<F5>", run_current_file, { desc = "Run Current File (VS Code F5)" })
+map({ "n", "i" }, "<C-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+')" })
+map({ "n", "i" }, "<D-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+')" })
+map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
+map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
 
 -- -------------------------------------------------------------------
--- 20. Live Server (F6, :LiveServerStart, :LiveServerStop)
+-- 20. Live Server (Alt+L, F6, :LiveServer)
 -- -------------------------------------------------------------------
-local live_server_job = nil
-local function start_live_server()
-  if live_server_job then
-    vim.notify("Live Server is already running on port 5500", vim.log.levels.WARN, { title = "Live Server" })
-    return
-  end
-  local dir = vim.fn.expand("%:p:h")
-  if dir == "" or vim.fn.isdirectory(dir) == 0 then
-    dir = vim.fn.getcwd()
-  end
-  live_server_job = vim.fn.jobstart({ "python3", "-m", "http.server", "5500", "--directory", dir }, {
-    on_exit = function() live_server_job = nil end,
-  })
-  local open_cmd = vim.fn.has("mac") == 1 and "open" or (vim.fn.has("win32") == 1 and "cmd.exe" or "xdg-open")
-  if open_cmd == "cmd.exe" then
-    vim.fn.jobstart({ "cmd.exe", "/c", "start", "http://localhost:5500" }, { detach = true })
-  else
-    vim.fn.jobstart({ open_cmd, "http://localhost:5500" }, { detach = true })
-  end
-  vim.notify("Live Server started at http://localhost:5500 (" .. dir .. ")", vim.log.levels.INFO, { title = "Live Server" })
-end
-
-local function stop_live_server()
-  if not live_server_job then
-    vim.notify("No Live Server currently running", vim.log.levels.WARN, { title = "Live Server" })
-    return
-  end
-  vim.fn.jobstop(live_server_job)
-  live_server_job = nil
-  vim.notify("Live Server stopped", vim.log.levels.INFO, { title = "Live Server" })
-end
-
-vim.api.nvim_create_user_command("LiveServerStart", start_live_server, { desc = "Start Live Server" })
-vim.api.nvim_create_user_command("LiveServerStop", stop_live_server, { desc = "Stop Live Server" })
-map({ "n", "i" }, "<F6>", function()
-  if live_server_job then stop_live_server() else start_live_server() end
-end, { desc = "Toggle Live Server (F6)" })
+map({ "n", "i" }, "<M-l>", function() _G.LiveServerToggle() end, { desc = "Toggle Live Server (Alt+L)" })
+map({ "n", "i" }, "<C-S-l>", function() _G.LiveServerToggle() end, { desc = "Toggle Live Server (Ctrl+Shift+L)" })
+map({ "n", "i" }, "<D-S-l>", function() _G.LiveServerToggle() end, { desc = "Toggle Live Server (Cmd+Shift+L)" })
+map({ "n", "i" }, "<F6>", function() _G.LiveServerToggle() end, { desc = "Toggle Live Server (F6)" })
 
 -- -------------------------------------------------------------------
 -- 21. Mouse Hover & Cursor Tooltips for Diagnostics & Solutions
@@ -2792,7 +2736,7 @@ map({ "n", "i", "x", "s" }, "<D-S-z>", "<Esc><C-r><cmd>startinsert<cr>", { desc 
 map({ "n", "i" }, "<D-b>", function() Snacks.explorer() end, { desc = "Toggle Explorer Sidebar (Cmd+B)" })
 
 -- Toggle Terminal: Cmd+` or Ctrl+`
-map({ "n", "i", "t" }, "<D-`>", toggle_terminal, { desc = "Toggle Terminal (Cmd+`)" })
+map({ "n", "i", "t" }, "<D-`>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (Cmd+`)" })
 
 -- Close Tab: Cmd+W / Quit: Cmd+Q
 map({ "n", "i" }, "<D-w>", close_current_buffer, { desc = "Close Tab (Cmd+W)" })
@@ -2901,6 +2845,8 @@ function _G.RunCurrentFile()
   end
 end
 
+map({ "n", "i" }, "<C-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+')" })
+map({ "n", "i" }, "<D-'>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+')" })
 map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
 map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
 map({ "n", "i" }, "<D-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+F5)" })

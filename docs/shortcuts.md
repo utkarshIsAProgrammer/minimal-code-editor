@@ -32,7 +32,12 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | **Toggle Explorer Sidebar**| Shows/hides project file tree sidebar. |
 | <kbd>Ctrl</kbd>+<kbd>0</kbd> | <kbd>⌘</kbd>+<kbd>0</kbd> | **Focus Sidebar** | Moves focus into the Explorer sidebar. |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | <kbd>⌘</kbd>+<kbd>1</kbd> | **Focus Editor** | Moves focus from sidebar back into the code editor. |
-| <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> *(or <kbd>Ctrl</kbd>+<kbd>`</kbd>)* | **Toggle Terminal** | Opens/closes embedded bottom terminal panel. |
+| <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> *(or <kbd>Ctrl</kbd>+<kbd>`</kbd>)* | **Toggle Terminal** | Opens/closes active terminal panel. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | **New Terminal Instance** | Spawns a new independent terminal instance (Terminal #1, #2, #3...). |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>L</kbd> *(or <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>L</kbd> | **Cycle Terminal Layout** | Switches layout: Bottom Drawer → Right Split → Centered Float. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Terminal Profiles** | Launch dedicated profiles: Shell, Python REPL, Bun/Node, Git/Lazygit, Btop. |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>P</kbd> | **Terminal Instance Picker**| Fuzzy-search and jump between open active terminal instances. |
+| <kbd>Ctrl</kbd>+<kbd>Up</kbd> / <kbd>Down</kbd> / <kbd>Left</kbd> / <kbd>Right</kbd> | <kbd>Ctrl</kbd>+Arrows | **Resize Terminal Drawer** | Dynamically expands or shrinks the terminal window on the fly. |
 | <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | **Next Tab** | Cycles forward through open tabs. |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> | **Previous Tab** | Cycles backward through open tabs. |
 
@@ -93,7 +98,8 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 | <kbd>F8</kbd> | <kbd>F8</kbd> | **Next Problem** | Jumps to next error / warning in buffer. |
 | <kbd>Shift</kbd>+<kbd>F8</kbd> | <kbd>Shift</kbd>+<kbd>F8</kbd> | **Previous Problem** | Jumps to previous error / warning in buffer. |
 | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | **Format Document** | Formats buffer via Prettier / Conform / LSP. |
-| <kbd>F5</kbd> | <kbd>F5</kbd> | **Run File** | Executes active Python, Go, Node, Rust, or C file. |
+| <kbd>Ctrl</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | <kbd>⌘</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | **Run Current File** | Executes active code file in bottom terminal drawer. |
+| <kbd>Alt</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | <kbd>⌥</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | **Live Server Toggle** | Starts/stops local live HTTP reload server with browser auto-open. |
 | <kbd>Esc</kbd> *(or <kbd>Ctrl</kbd>+<kbd>E</kbd> / <kbd>Shift</kbd>+<kbd>Esc</kbd>)* | <kbd>Esc</kbd> | **Dismiss Suggestions** | Closes completion popup synchronously with zero cursor shift. |
 
 ---

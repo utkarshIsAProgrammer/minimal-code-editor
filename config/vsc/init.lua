@@ -18,8 +18,10 @@ local theme_mgr = require("theme")
 local saved_theme = theme_mgr.get_current_theme()
 pcall(vim.cmd, "colorscheme " .. saved_theme)
 
--- 3. Pre-load keymaps & recents bridges so globals exist before dashboard renders
+-- 3. Pre-load keymaps, recents, terminal & liveserver bridges so globals exist
 pcall(require, "recents")
+pcall(require, "terminal")
+pcall(require, "liveserver")
 pcall(require, "keymaps")
 
 -- 4. Bootstrap lazy.nvim in isolated data directory (~/.local/share/vsc)

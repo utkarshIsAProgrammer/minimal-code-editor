@@ -107,18 +107,14 @@ minimal main.py     # Opens specific file
 | **Open Folder** | <kbd>Ctrl</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>O</kbd> | Select or type any folder path to open as workspace |
 | **Command Palette** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | Fuzzy-search and execute all editor commands |
 | **Toggle Sidebar** | <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | Opens/closes Explorer file tree |
-| **Toggle Terminal** | <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> | Opens embedded terminal |
-| **Toggle Line Comment** | <kbd>Ctrl</kbd>+<kbd>/</kbd> | <kbd>⌘</kbd>+<kbd>/</kbd> | Toggles single or multiline comments |
-| **Toggle Block Comment**| <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>A</kbd> | Toggles block comments (`/* */`, `<!-- -->`) |
-| **Find in File** | <kbd>Ctrl</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>F</kbd> | Search text in current file |
-| **Replace in File** | <kbd>Ctrl</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>H</kbd> | Find and replace in current file |
-| **Find in Files (Grep)**| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> | Search across all project files |
-| **Replace in Files** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | Project-wide search and replace |
-| **Multi-Cursor Match** | <kbd>Ctrl</kbd>+<kbd>D</kbd> | <kbd>⌘</kbd>+<kbd>D</kbd> | Add selection to next match |
-| **Quick Fix / Solutions**| <kbd>Ctrl</kbd>+<kbd>.</kbd> *(or <kbd>Alt</kbd>+<kbd>Enter</kbd>)* | <kbd>⌘</kbd>+<kbd>.</kbd> | LSP code actions, imports & autocorrect |
-| **Hover / Problem Details**| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>I</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>i</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>I</kbd> | Shows hover documentation and diagnostic problem details |
-| **Format Document** | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>F</kbd> | Formats buffer code |
-| **Run Current File** | <kbd>F5</kbd> *(or <kbd>Ctrl</kbd>+<kbd>F5</kbd>)* | <kbd>F5</kbd> *(or <kbd>⌘</kbd>+<kbd>F5</kbd>)* | Executes active code file in bottom terminal drawer |
+| **Run Current File** | <kbd>Ctrl</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | <kbd>⌘</kbd>+<kbd>'</kbd> *(or <kbd>F5</kbd>)* | Executes active code file in bottom terminal drawer |
+| **Live Server** | <kbd>Alt</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | <kbd>⌥</kbd>+<kbd>L</kbd> *(or <kbd>F6</kbd>)* | Toggles local live HTTP reload server with auto-browser opening |
+| **Toggle Terminal** | <kbd>Ctrl</kbd>+<kbd>`</kbd> | <kbd>⌘</kbd>+<kbd>`</kbd> | Opens/closes active terminal panel |
+| **New Terminal Instance**| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | Spawns a new independent terminal instance (#1, #2, #3...) |
+| **Cycle Terminal Layout**| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>L</kbd> *(or <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>)*| <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>L</kbd> | Switches layout: Bottom Drawer → Right Split → Centered Float |
+| **Terminal Profiles** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | Launch profiles: Shell, Python REPL, Bun/Node REPL, Git, Btop |
+| **Active Terminals Picker**| <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>P</kbd> | Fuzzy-search and jump between open terminal instances |
+| **Resize Terminal Drawer**| <kbd>Ctrl</kbd>+<kbd>Up</kbd> / <kbd>Down</kbd> / <kbd>Left</kbd> / <kbd>Right</kbd> | <kbd>Ctrl</kbd>+Arrows | Expands or shrinks the terminal window on the fly |
 | **Yazi Doc Review** | <kbd>Alt</kbd>+<kbd>Y</kbd> *(or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | <kbd>⌥</kbd>+<kbd>Y</kbd> *(or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | Floating Yazi document reviewer & chooser |
 | **Markdown Live Review**| <kbd>Alt</kbd>+<kbd>M</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | <kbd>⌥</kbd>+<kbd>M</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | In-editor rich Markdown formatting |
 | **Zen / Focus Mode** | <kbd>Alt</kbd>+<kbd>Z</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | <kbd>⌥</kbd>+<kbd>Z</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | Distraction-free document writing mode |
