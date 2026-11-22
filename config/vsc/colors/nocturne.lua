@@ -64,7 +64,12 @@ vim.g.colors_name = "nocturne"
 vim.o.termguicolors = true
 
 -- Background transparency configuration
-local transparent = vim.g.nocturne_transparent ~= false
+local transparent
+if vim.g.minimal_transparent ~= nil then
+  transparent = (vim.g.minimal_transparent == true)
+else
+  transparent = vim.g.nocturne_transparent ~= false
+end
 local bg_main = transparent and "NONE" or c.bg
 local bg_sidebar = transparent and "NONE" or c.bg_sidebar
 local bg_float = transparent and "NONE" or c.bg_float

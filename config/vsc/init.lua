@@ -7,14 +7,16 @@
 -- Prepend config bin to PATH so embedded terminals route 'nvim', 'minimal', 'msc', 'code' to active instance
 local config_bin = vim.fn.stdpath("config") .. "/bin"
 if vim.fn.isdirectory(config_bin) == 1 then
-  vim.env.PATH = config_bin .. ":" .. vim.env.PATH
+  local sep = vim.fn.has("win32") == 1 and ";" or ":"
+  vim.env.PATH = config_bin .. sep .. vim.env.PATH
 end
 
 -- 1. Load modeless options (cursor, mouse, selection, clipboard)
 require("options")
 
--- 2. Load theme manager and restore saved theme (defaults to darkmagic)
+-- 2. Load theme manager and restore saved theme & transparency (defaults to darkmagic)
 local theme_mgr = require("theme")
+theme_mgr.init_transparency()
 local saved_theme = theme_mgr.get_current_theme()
 pcall(vim.cmd, "colorscheme " .. saved_theme)
 

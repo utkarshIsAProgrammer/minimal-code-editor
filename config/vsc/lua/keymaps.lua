@@ -1467,6 +1467,7 @@ local function delete_word_right()
 end
 
 map({ "i", "n", "x", "s" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
+map({ "i", "n", "x", "s" }, "<C-h>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
 map({ "i", "n", "x", "s" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
 
 map({ "i", "n", "x", "s" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
@@ -1549,19 +1550,19 @@ local function insert_line_above()
   vim.cmd("startinsert!")
 end
 
-map({ "n", "i" }, "<C-CR>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
-map({ "n", "i" }, "<C-Enter>", insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
-map({ "n", "i" }, "<M-o>", insert_line_below, { desc = "Insert Line Below (Alt+o)" })
-map({ "n", "i" }, "<A-o>", insert_line_below, { desc = "Insert Line Below (Alt+o)" })
+local below_keys = { "<C-CR>", "<C-Enter>", "<C-Return>", "<NL>", "<C-j>", "<C-J>", "<M-o>", "<A-o>" }
+for _, k in ipairs(below_keys) do
+  map({ "n", "i", "x", "s" }, k, insert_line_below, { desc = "Insert Line Below (Ctrl+Enter)" })
+end
 
-map({ "n", "i" }, "<C-S-CR>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
-map({ "n", "i" }, "<C-S-Enter>", insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
-map({ "n", "i" }, "<M-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
-map({ "n", "i" }, "<A-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Enter)" })
-map({ "n", "i" }, "<M-S-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+Enter)" })
-map({ "n", "i" }, "<A-S-CR>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+Enter)" })
-map({ "n", "i" }, "<M-O>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+O)" })
-map({ "n", "i" }, "<A-O>", insert_line_above, { desc = "Insert Line Above (Alt+Shift+O)" })
+local above_keys = { "<C-S-CR>", "<C-S-Enter>", "<C-S-Return>", "<M-CR>", "<A-CR>", "<M-S-CR>", "<A-S-CR>", "<M-O>", "<A-O>" }
+for _, k in ipairs(above_keys) do
+  map({ "n", "i", "x", "s" }, k, insert_line_above, { desc = "Insert Line Above (Ctrl+Shift+Enter)" })
+end
+
+-- Alt+B: Toggle Background Transparency (Solid Theme vs Acrylic Glass)
+map({ "n", "i" }, "<M-b>", function() require("theme").toggle_transparency() end, { desc = "Toggle Transparency (Alt+B)" })
+map({ "n", "i" }, "<A-b>", function() require("theme").toggle_transparency() end, { desc = "Toggle Transparency (Alt+B)" })
 
 map({ "x", "s" }, "<Tab>", function()
   vim.cmd("normal! \x1bgv>gv")

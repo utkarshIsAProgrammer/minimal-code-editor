@@ -43,7 +43,8 @@ return {
     lazy = false,
     opts = {
       default = true,
-      strict = true,
+      strict = false,
+      color_icons = true,
     },
   },
 

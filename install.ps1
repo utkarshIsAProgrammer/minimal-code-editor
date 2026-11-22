@@ -1,4 +1,4 @@
-# ===================================================================
+﻿# ===================================================================
 #  ⚡ Minimal Code Editor - Windows Native PowerShell Installer
 #  Usage: irm https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.ps1 | iex
 # ===================================================================
@@ -182,8 +182,20 @@ New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 New-Item -ItemType Directory -Force -Path $AssetsDir | Out-Null
 
 # Copy Neovim Config (Isolated to LOCALAPPDATA\vsc)
-Get-ChildItem -Path "$SrcDir\config\vsc" | ForEach-Object {
-    Copy-Item -Path $_.FullName -Destination $NvimConfigDir -Recurse -Force
+if (Get-Command robocopy -ErrorAction SilentlyContinue) {
+    robocopy "$SrcDir\config\vsc" "$NvimConfigDir" /E /NP /NFL /NDL /NJH /NJS | Out-Null
+} else {
+    Get-ChildItem -Path "$SrcDir\config\vsc" -Recurse | ForEach-Object {
+        $rel = $_.FullName.Substring(("$SrcDir\config\vsc").Length).TrimStart("\/")
+        $target = Join-Path $NvimConfigDir $rel
+        if ($_.PSIsContainer) {
+            if (-not (Test-Path $target)) { New-Item -ItemType Directory -Path $target -Force | Out-Null }
+        } else {
+            $targetDir = Split-Path $target -Parent
+            if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
+            Copy-Item -Path $_.FullName -Destination $target -Force
+        }
+    }
 }
 Write-Host "  ✔ Installed Neovim config to: $NvimConfigDir" -ForegroundColor Green
 
@@ -285,7 +297,7 @@ if ($UserPath -notlike "*$BinDir*") {
 
 # Immediate session commands (callable right now without restarting PowerShell)
 function global:minimal { & "$BinDir\minimal.cmd" @args }
-function global:msc { & "$BinDir\minimal.cmd" @args }
+function global:msc { & "$BinDir\msc.cmd" @args }
 
 # Clean up any profile file created by older installer versions to eliminate ExecutionPolicy warnings
 try {
@@ -321,6 +333,12 @@ Write-Host "Launch options:" -ForegroundColor White
 Write-Host "  1. Type 'minimal' or 'msc' in any PowerShell / CMD terminal" -ForegroundColor Cyan
 Write-Host "  2. Search for 'Minimal' in your Windows Start Menu" -ForegroundColor Cyan
 Write-Host "  3. Double-click the 'Minimal' shortcut on your Desktop" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "💡 Important Windows Tips:" -ForegroundColor Yellow
+Write-Host "  • Icons: To see file icons, select a Nerd Font (e.g. 'Cascadia Code NF' or 'JetBrainsMono NF')." -ForegroundColor Cyan
+Write-Host "    In Windows Terminal: Settings (Ctrl+,) -> Defaults -> Appearance -> Font face." -ForegroundColor DarkCyan
+Write-Host "  • Theme & Transparency: Press Alt+B or type ':Transparency' inside Minimal to toggle" -ForegroundColor Cyan
+Write-Host "    between rich solid theme colors and frosted acrylic glass pass-through." -ForegroundColor DarkCyan
 Write-Host ""
 Write-Host "ℹ Note: If you have older terminal windows currently open, please open a new window to refresh your PATH." -ForegroundColor DarkCyan
 Write-Host ""

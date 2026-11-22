@@ -58,7 +58,13 @@ end
 vim.g.colors_name = "medieval"
 vim.o.termguicolors = true
 
-local transparent = vim.g.medieval_transparent ~= false
+-- Background transparency configuration
+local transparent
+if vim.g.minimal_transparent ~= nil then
+  transparent = (vim.g.minimal_transparent == true)
+else
+  transparent = vim.g.medieval_transparent ~= false
+end
 local bg_main = transparent and "NONE" or c.bg
 local bg_sidebar = transparent and "NONE" or c.bg_sidebar
 local bg_float = transparent and "NONE" or c.bg_float

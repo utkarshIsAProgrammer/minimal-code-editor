@@ -6,6 +6,58 @@
 local M = {}
 
 local theme_file = vim.fn.stdpath("state") .. "/active_theme.txt"
+local transparency_file = vim.fn.stdpath("state") .. "/transparency.txt"
+
+-- Transparency configuration and persistence
+function M.is_transparent()
+  if vim.fn.filereadable(transparency_file) == 1 then
+    local lines = vim.fn.readfile(transparency_file)
+    if lines and lines[1] and lines[1]:match("%S") then
+      local val = vim.trim(lines[1]):lower()
+      return (val == "true" or val == "1" or val == "on")
+    end
+  end
+  -- Default: on Windows without terminal acrylic, transparent background renders as flat black,
+  -- so default to false (rich solid theme background colors) on Windows unless explicitly turned on.
+  if vim.fn.has("win32") == 1 then
+    return false
+  end
+  return true
+end
+
+function M.save_transparency(enabled)
+  pcall(vim.fn.mkdir, vim.fn.fnamemodify(transparency_file, ":p:h"), "p")
+  vim.fn.writefile({ enabled and "true" or "false" }, transparency_file)
+end
+
+function M.apply_transparency_globals(enabled)
+  vim.g.minimal_transparent = enabled
+  vim.g.darkmagic_transparent = enabled
+  vim.g.cyberaurora_transparent = enabled
+  vim.g.medieval_transparent = enabled
+  vim.g.nocturne_transparent = enabled
+end
+
+function M.init_transparency()
+  local trans = M.is_transparent()
+  M.apply_transparency_globals(trans)
+end
+
+function M.set_transparency(enabled, notify)
+  M.apply_transparency_globals(enabled)
+  M.save_transparency(enabled)
+  local cur = vim.g.colors_name or M.get_current_theme()
+  pcall(vim.cmd, "colorscheme " .. cur)
+  if notify ~= false then
+    local state_str = enabled and "ON (Acrylic Glass / Terminal Pass-Through)" or "OFF (Rich Solid Theme Colors)"
+    vim.notify("✓ Background Transparency: " .. state_str, vim.log.levels.INFO, { title = "Minimal Theme" })
+  end
+end
+
+function M.toggle_transparency()
+  local current = (vim.g.minimal_transparent ~= false)
+  M.set_transparency(not current, true)
+end
 
 -- Curated list of bespoke themes
 M.themes = {
@@ -220,9 +272,30 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   desc = "Persist colorscheme selection and refresh indent rainbow highlights",
 })
 
--- Global bridges
+-- Global bridges & commands
 _G.ToggleTheme = M.toggle
 _G.SelectThemePicker = M.picker
 _G.SetTheme = M.set_theme
+_G.ToggleTransparency = M.toggle_transparency
+_G.SetTransparency = M.set_transparency
+
+vim.api.nvim_create_user_command("Transparency", function(opts)
+  local arg = opts.args and vim.trim(opts.args):lower() or ""
+  if arg == "on" or arg == "1" or arg == "true" then
+    M.set_transparency(true, true)
+  elseif arg == "off" or arg == "0" or arg == "false" then
+    M.set_transparency(false, true)
+  else
+    M.toggle_transparency()
+  end
+end, {
+  nargs = "?",
+  complete = function() return { "on", "off", "toggle" } end,
+  desc = "Toggle or set background transparency (on/off)",
+})
+
+vim.api.nvim_create_user_command("Transparent", function()
+  M.toggle_transparency()
+end, { desc = "Toggle background transparency" })
 
 return M
