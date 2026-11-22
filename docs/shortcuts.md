@@ -2,20 +2,20 @@
 
 Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS Code.
 
-> **Cross-Platform Design:**
-> - **Linux & Windows:** Use standard <kbd>Ctrl</kbd> and <kbd>Alt</kbd> combinations.
+> **Platform Design:**
+> - **Linux (Kitty):** Standard <kbd>Ctrl</kbd> and <kbd>Alt</kbd> shortcuts.
 > - **macOS:** Native <kbd>Cmd (⌘)</kbd> and <kbd>Option (⌥)</kbd> shortcuts.
 
 ---
 
 ## 🛠️ General & Application Control
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Dismiss Popups** | Dismisses suggestion popups/menus cleanly with zero cursor jitter. |
 | <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>S</kbd> | **Save File** | Saves current file. If untitled, prompts for filename/path. |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | **Save As** | Prompts to save the file under a new name or path. |
-| <kbd>Ctrl</kbd>+<kbd>W</kbd> | <kbd>⌘</kbd>+<kbd>W</kbd> | **Close Tab** | Closes active editor tab / buffer. |
+| <kbd>Ctrl</kbd>+<kbd>W</kbd> *(or <kbd>Alt</kbd>+<kbd>W</kbd>)* | <kbd>⌘</kbd>+<kbd>W</kbd> | **Close Tab** | Closes active editor tab / buffer (:Close). |
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | <kbd>⌘</kbd>+<kbd>Q</kbd> | **Quit Minimal** | Prompts to save modified files, then exits cleanly. |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | **Command Palette** | Search and immediately execute any editor command. |
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>S</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>s</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>S</kbd> | **Edit Keybindings** | Opens keybindings configuration file directly. |
@@ -24,10 +24,13 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## 📂 File & Workspace Management
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>N</kbd> | <kbd>⌘</kbd>+<kbd>N</kbd> | **New Blank File** | Creates a fresh, empty buffer and enters typing mode. |
 | <kbd>Ctrl</kbd>+<kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>P</kbd> | **Open File (Quick Open)** | Fuzzy-search and jump to any file in your workspace. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | **Go to Symbol** | Fuzzy-search functions, variables, and classes in current file. |
+| <kbd>Alt</kbd>+<kbd>Left</kbd> / <kbd>Right</kbd> | <kbd>⌥</kbd>+<kbd>Left</kbd> / <kbd>Right</kbd> | **Navigate Back / Forward** | Jumps back and forward through cursor jump history. |
+| `:Rename <name>` | `:Rename <name>` | **Rename Active File** | Renames and moves current file on disk without losing buffers. |
 | <kbd>Ctrl</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>O</kbd> | **Open Folder** | Select or type any folder path to open as workspace. |
 | <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | **Toggle Explorer Sidebar**| Shows/hides project file tree sidebar. |
 | <kbd>Ctrl</kbd>+<kbd>0</kbd> | <kbd>⌘</kbd>+<kbd>0</kbd> | **Focus Sidebar** | Moves focus into the Explorer sidebar. |
@@ -45,7 +48,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## 🔍 Search & Replace
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>F</kbd> | <kbd>⌘</kbd>+<kbd>F</kbd> | **Find in File** | Interactive search within the current buffer. |
 | <kbd>Ctrl</kbd>+<kbd>H</kbd> | <kbd>⌘</kbd>+<kbd>H</kbd> | **Replace in File** | Interactive find-and-replace in current file. |
@@ -57,7 +60,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## ✏️ Editing & Clipboard
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>Z</kbd> | <kbd>⌘</kbd>+<kbd>Z</kbd> | **Undo** | Reverts previous edits. |
 | <kbd>Ctrl</kbd>+<kbd>Y</kbd> *(or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> | **Redo** | Reapplies undone changes. |
@@ -73,7 +76,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## 📋 Comments & Line Manipulation
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>/</kbd> | <kbd>⌘</kbd>+<kbd>/</kbd> | **Toggle Line Comment** | Toggles single or multiline comments (`//`, `#`, `--`). |
 | <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd> | <kbd>Shift</kbd>+<kbd>⌥</kbd>+<kbd>A</kbd> | **Toggle Block Comment**| Toggles block comment (`/* */`, `<!-- -->`). |
@@ -88,7 +91,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## 🧠 Code Intelligence & LSP
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>.</kbd> *(or <kbd>Alt</kbd>+<kbd>Enter</kbd>)* | <kbd>⌘</kbd>+<kbd>.</kbd> | **Quick Fix / Solutions**| Shows available code actions, imports, and autocorrect. |
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>I</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>i</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>I</kbd> | **Hover & Diagnostics** | Shows documentation hover and detailed problem diagnostics. |
@@ -107,7 +110,7 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## 📖 Documentation, Document Review & Focus Tools
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Alt</kbd>+<kbd>Y</kbd> *(or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | <kbd>⌥</kbd>+<kbd>Y</kbd> *(or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>)* | **Yazi Document Review** | Pops up floating Yazi file manager with instant image, doc and tree preview. Press <kbd>Enter</kbd> to open. |
 | <kbd>Alt</kbd>+<kbd>M</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | <kbd>⌥</kbd>+<kbd>M</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>V</kbd>)* | **In-Editor Markdown Review**| Real-time markdown rendering with icons, interactive checkboxes, tables and GitHub callouts. |
@@ -118,9 +121,12 @@ Minimal bridges the speed of Neovim with the familiar 1-to-1 muscle memory of VS
 
 ## 🎨 Themes & Customization
 
-| Linux / Windows | macOS | Action | Description |
+| Linux (Kitty) | macOS | Action | Description |
 | :--- | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | **Theme Picker** | Interactive theme picker with live syntax showroom preview across all 4 handcrafted themes. |
 | <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | **Cycle Themes** | Quick-cycles: Dark Magic → Cyber Aurora → Medieval Scriptorium → Crimson Nocturne. |
 | `:Theme <name>` | `:Theme <name>` | **Command Switch** | Directly sets theme with autocomplete (`:Theme darkmagic`, `:Theme cyberaurora`, `:Theme medieval`, `:Theme nocturne`). |
+| `:Transparency` *(or `:Transparent`)* | `:Transparency` | **Toggle Transparency** | Toggles frosted glass / transparent background on and off. |
+| `:AutoSave [on\|off\|toggle]` | `:AutoSave` | **Live Auto-Save** | Toggles or controls debounced background auto-saving. |
+| `:SessionSave` / `:SessionRestore` | `:SessionSave` | **Workspace Session** | Manually save or restore workspace tabs, layout, and window states. |
 | `:IndentRainbow` | `:IndentRainbow` | **Indent Scope** | Toggles glowing LazyVim-style emerald indent scope guides. |

@@ -17,11 +17,7 @@ function M.is_transparent()
       return (val == "true" or val == "1" or val == "on")
     end
   end
-  -- Default: on Windows without terminal acrylic, transparent background renders as flat black,
-  -- so default to false (rich solid theme background colors) on Windows unless explicitly turned on.
-  if vim.fn.has("win32") == 1 then
-    return false
-  end
+  -- Default to true for transparent/frosted glass terminal look on Linux & macOS (Kitty)
   return true
 end
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ===================================================================
-#  ⚡ Minimal Code Editor - Universal Installer
-#  Works on Linux, macOS, and Windows (WSL2)
+#  ⚡ Minimal Code Editor - Dedicated Installer
+#  Crafted exclusively for Linux and macOS (powered by Kitty)
 # ===================================================================
 
 set -e
@@ -40,6 +40,11 @@ case "$OS" in
 esac
 
 echo -e "📦 Detected Platform: ${GREEN}${PLATFORM}${RESET}"
+
+if [ "$PLATFORM" = "Unknown" ]; then
+    echo -e "${RED}✘ Minimal is designed specifically for Linux and macOS.${RESET}"
+    exit 1
+fi
 
 # -------------------------------------------------------------------
 # 2. Dependency Checks

@@ -4,7 +4,7 @@
   <img src="assets/banner.png" alt="Minimal Code Editor Promo Card" width="100%" />
 </p>
 
-**Minimal** is a lightning-fast, distraction-free code editor combining the raw speed of Neovim with the familiar 1-to-1 muscle memory of VS Code. Built for developers who want instantaneous startup, modeless typing, zero Electron bloat, and standard cross-platform keybindings across Linux, Windows, and macOS.
+**Minimal** is a lightning-fast, distraction-free code editor combining the raw speed of Neovim with the familiar 1-to-1 muscle memory of VS Code. Crafted exclusively for Linux and macOS and powered by the modern Kitty terminal, Minimal gives you instantaneous startup, modeless typing, zero Electron bloat, and standard desktop keybindings.
 
 ---
 
@@ -12,7 +12,12 @@
 
 - **Sub-25ms Startup:** Memory footprint under ~30MB with zero Electron overhead.
 - **Pure Modeless Editing:** Starts directly in write mode—no Vim mode hurdles, modal traps, or unexpected navigation keys. Press <kbd>Esc</kbd> to dismiss suggestion popups cleanly with zero cursor jitter.
-- **1-to-1 VS Code Keybindings:** Exactly one sensible shortcut per operation (<kbd>Ctrl+S</kbd>, <kbd>Ctrl+P</kbd>, <kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>, <kbd>Ctrl+W</kbd>, <kbd>Ctrl+Q</kbd> on Linux/Windows; native <kbd>Cmd ⌘</kbd> on macOS).
+- **Automatic Workspace & Session Persistence:** Re-opens all previously open tabs, splits, working directory, and exact cursor positions just like VS Code and Zed.
+- **Live Auto-Save:** Automatically saves changes during brief typing pauses and instantly on tab or window focus change.
+- **Real-Time Colorizer:** Instant color preview badges for HEX, RGB, HSL, CSS variable, and Tailwind color codes.
+- **Kitty Graphics Protocol Inline Images:** True inline graphics rendering for PNG, JPEG, SVG, and Markdown images via Kitty.
+- **Frosted Glass & Transparency:** Smooth background blur and transparency with instant toggling via `:Transparency`.
+- **1-to-1 VS Code Keybindings:** Exactly one sensible shortcut per operation (<kbd>Ctrl+S</kbd>, <kbd>Ctrl+P</kbd>, <kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>, <kbd>Ctrl+W</kbd>, <kbd>Ctrl+Q</kbd> on Linux; native <kbd>Cmd ⌘</kbd> on macOS).
 - **Curated Themes with Live Preview & Syntax Showroom:** 4 bespoke handcrafted themes (🔮 **Dark Magic**, 🌌 **Cyber Aurora**, 📜 **Medieval Scriptorium**, 🩸 **Crimson Nocturne**) with instantaneous live preview via <kbd>Ctrl+K Ctrl+T</kbd>, <kbd>Ctrl+K t</kbd>, or <kbd>Alt+T</kbd>, plus one-key cycling with <kbd>F10</kbd>. Live showroom preview renders full syntax tokens automatically when browsing from empty files or the dashboard.
 - **Floating Yazi Document Review & Chooser:** Built-in floating Yazi integration (<kbd>Alt+Y</kbd> / <kbd>Ctrl+Shift+E</kbd> / `:Yazi`). Inspect documents, image previews, and directory trees, then press <kbd>Enter</kbd> to open directly in Minimal.
 - **In-Editor Markdown Document Review:** Real-time formatting for Markdown files (<kbd>Alt+M</kbd> / <kbd>Ctrl+K V</kbd>) with icons for headers, interactive checkboxes, Unicode table borders, and GitHub callout badges (`[!NOTE]`, `[!WARNING]`, `[!TIP]`).
@@ -29,22 +34,17 @@
 
 ## 📦 Prerequisites
 
-Minimal requires **Neovim** (>= 0.10.0, recommended 0.11+) and **Git**. Minimal runs out-of-the-box in any modern terminal (**Kitty**, **Ghostty**, **WezTerm**, **Alacritty**, or standard system terminals). On Linux and macOS, Kitty or Ghostty provides the dedicated borderless GUI window.
-
-### Windows (Native PowerShell)
-```powershell
-winget install Neovim.Neovim Git.Git
-```
+Minimal requires **Neovim** (>= 0.10.0, recommended 0.11+), **Kitty** (recommended for graphics, blur, and borderless window), and **Git**.
 
 ### macOS (via Homebrew)
 ```bash
-brew install neovim kitty ghostty git
+brew install neovim kitty git
 ```
 
 ### Linux
 - **Arch Linux / Manjaro / EndeavourOS:**
   ```bash
-  sudo pacman -S neovim kitty ghostty git
+  sudo pacman -S neovim kitty git
   ```
 - **Ubuntu / Debian / Linux Mint:**
   ```bash
@@ -55,22 +55,16 @@ brew install neovim kitty ghostty git
   sudo dnf install neovim kitty git
   ```
 
-*(Recommended)* Install a Nerd Font such as **JetBrainsMono Nerd Font** for clean icons and status glyphs.
+*(Recommended)* Install a Nerd Font such as **CaskaydiaCove Nerd Font** or **JetBrainsMono Nerd Font** for clean icons and status glyphs.
 
 ---
 
 ## 🚀 Installation & Update
 
-### Universal Linux & macOS Installer
+### Linux & macOS Installer
 Run in your terminal:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.sh | bash
-```
-
-### Native Windows PowerShell Installer
-Run in PowerShell:
-```powershell
-irm https://raw.githubusercontent.com/utkarshIsAProgrammer/minimal-code-editor/main/install.ps1 | iex
 ```
 
 ### Updating Minimal
@@ -97,15 +91,19 @@ minimal main.py     # Opens specific file
 
 ## ⌨️ Essential Shortcuts
 
-| Action | Linux & Windows | macOS (`Cmd` / `⌘`) | Description |
+| Action | Linux (Kitty) | macOS (`Cmd` / `⌘`) | Description |
 | :--- | :--- | :--- | :--- |
 | **Dismiss Popups** | <kbd>Esc</kbd> | <kbd>Esc</kbd> | Dismisses completion popups/menus cleanly with zero cursor jitter |
-| **Save File** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>S</kbd> | Saves current file |
+| **Save File** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>S</kbd> | Saves current file (also has debounced Live Auto-Save) |
 | **Save As** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Prompts for path/name |
-| **Close Tab** | <kbd>Ctrl</kbd>+<kbd>W</kbd> | <kbd>⌘</kbd>+<kbd>W</kbd> | Closes active tab |
+| **Close Tab** | <kbd>Ctrl</kbd>+<kbd>W</kbd> *(or <kbd>Alt</kbd>+<kbd>W</kbd>)* | <kbd>⌘</kbd>+<kbd>W</kbd> | Closes active tab (:Close) |
 | **Quit Minimal** | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | <kbd>⌘</kbd>+<kbd>Q</kbd> | Prompts to save dirty files and exits cleanly |
 | **Open File (Quick Open)** | <kbd>Ctrl</kbd>+<kbd>P</kbd> | <kbd>⌘</kbd>+<kbd>P</kbd> | Fuzzy-search files in workspace |
 | **Open Folder** | <kbd>Ctrl</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>O</kbd> | Select or type any folder path to open as workspace |
+| **Go to Symbol** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> | Fuzzy-search symbols (functions, classes) in file |
+| **Navigate Back / Forward**| <kbd>Alt</kbd>+<kbd>Left</kbd> / <kbd>Right</kbd> | <kbd>⌥</kbd>+<kbd>Left</kbd> / <kbd>Right</kbd> | Jump back and forward through jump history |
+| **Insert Line Below** | <kbd>Ctrl</kbd>+<kbd>Enter</kbd> | <kbd>⌘</kbd>+<kbd>Enter</kbd> | Inserts newline below without breaking current line |
+| **Insert Line Above** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> | Inserts newline above without breaking current line |
 | **Command Palette** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> *(or <kbd>F1</kbd>)* | Fuzzy-search and execute all editor commands |
 | **Toggle Sidebar** | <kbd>Ctrl</kbd>+<kbd>B</kbd> | <kbd>⌘</kbd>+<kbd>B</kbd> | Opens/closes Explorer file tree |
 | **Run Current File** | <kbd>F5</kbd> *(or <kbd>Ctrl</kbd>+<kbd>F5</kbd>)* | <kbd>F5</kbd> *(or <kbd>⌘</kbd>+<kbd>F5</kbd>)* | Executes active code file in bottom terminal drawer |
@@ -121,6 +119,7 @@ minimal main.py     # Opens specific file
 | **Zen / Focus Mode** | <kbd>Alt</kbd>+<kbd>Z</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | <kbd>⌥</kbd>+<kbd>Z</kbd> *(or <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>Z</kbd>)* | Distraction-free document writing mode |
 | **Color Theme Picker** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>T</kbd> *(or <kbd>Alt</kbd>+<kbd>T</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>T</kbd> | Interactive theme picker with live syntax showroom |
 | **Cycle Theme** | <kbd>F10</kbd> *(or <kbd>Alt</kbd>+<kbd>F10</kbd>)* | <kbd>F10</kbd> | Sequential cycle through all 4 bespoke themes |
+| **Toggle Transparency** | `:Transparency` *(or `:Transparent`)* | `:Transparency` | Toggles background transparency / frosted glass |
 | **Edit Keybindings** | <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Ctrl</kbd>+<kbd>S</kbd> *(or <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>s</kbd>)* | <kbd>⌘</kbd>+<kbd>K</kbd> <kbd>⌘</kbd>+<kbd>S</kbd> | Opens keybindings configuration file |
 
 📖 For the full keybindings manual, refer to **[docs/shortcuts.md](docs/shortcuts.md)** or the **[Printable PDF Cheatsheet](docs/shortcuts.pdf)**.

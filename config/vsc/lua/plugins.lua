@@ -310,6 +310,7 @@ return {
       },
       statuscolumn = { enabled = true },
       words = { enabled = true },
+      image = { enabled = true },
       scroll = {
         enabled = true,
         animate = {
@@ -1167,6 +1168,22 @@ return {
       mode = "cursor",
       separator = nil,
       zindex = 20,
+    },
+  },
+
+  -- 18. Real-Time Inline Colorizer (nvim-highlight-colors)
+  {
+    "brenoprata10/nvim-highlight-colors",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      render = "badge",
+      enable_hex = true,
+      enable_short_hex = true,
+      enable_rgb = true,
+      enable_hsl = true,
+      enable_var_usage = true,
+      enable_named_colors = true,
+      enable_tailwind = true,
     },
   },
 }
