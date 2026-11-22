@@ -2110,10 +2110,10 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- -------------------------------------------------------------------
--- 19. One-Click Code Runner (F5 and Ctrl+F5)
+-- 19. One-Click Code Runner (F5, Ctrl+F5, Cmd+F5)
 -- -------------------------------------------------------------------
-map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
-map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
+map({ "n", "i", "t" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
+map({ "n", "i", "t" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
 
 -- -------------------------------------------------------------------
 -- 20. Live Server (Alt+L, F6, :LiveServer)
@@ -2903,16 +2903,43 @@ map({ "n", "i" }, "<D-S-e>", function() _G.OpenYazi() end, { desc = "Open Yazi D
 vim.api.nvim_create_user_command("Yazi", function(opts) _G.OpenYazi(opts.args ~= "" and opts.args or nil) end, { nargs = "?", complete = "file", desc = "Open floating Yazi file manager & document reviewer" })
 
 -- 2. One-Key Code Runner (F5 / Ctrl+F5)
+_G._runner_term = nil
+
 function _G.RunCurrentFile()
-  if vim.bo.modified then
-    pcall(vim.cmd, "w")
+  local cur_buf = vim.api.nvim_get_current_buf()
+  local filepath = vim.api.nvim_buf_get_name(cur_buf)
+  local buftype = vim.bo[cur_buf].buftype or ""
+
+  -- If focus is inside a terminal, helper, or dashboard, locate the active editable document
+  if buftype ~= "" or filepath == "" or vim.bo[cur_buf].filetype == "snacks_terminal" then
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if vim.api.nvim_win_is_valid(win) then
+        local b = vim.api.nvim_win_get_buf(win)
+        local bt = vim.bo[b].buftype or ""
+        local ft = vim.bo[b].filetype or ""
+        local name = vim.api.nvim_buf_get_name(b)
+        if bt == "" and name ~= "" and ft ~= "snacks_dashboard" and not ft:find("explorer") and not ft:find("picker") then
+          cur_buf = b
+          filepath = name
+          break
+        end
+      end
+    end
   end
-  local filepath = vim.api.nvim_buf_get_name(0)
+
   if filepath == "" then
     vim.notify("Save the file before running.", vim.log.levels.WARN, { title = "Minimal Code Runner" })
     return
   end
-  local ext = vim.fn.expand("%:e"):lower()
+
+  -- Auto-save before running
+  if vim.api.nvim_buf_is_valid(cur_buf) and vim.bo[cur_buf].modified then
+    vim.api.nvim_buf_call(cur_buf, function()
+      pcall(vim.cmd, "silent! write")
+    end)
+  end
+
+  local ext = vim.fn.fnamemodify(filepath, ":e"):lower()
   local file = vim.fn.shellescape(filepath)
   local runner_cmd = nil
 
@@ -2934,6 +2961,24 @@ function _G.RunCurrentFile()
     runner_cmd = "gcc " .. file .. " -o /tmp/minimal_c_run && /tmp/minimal_c_run"
   elseif ext == "cpp" or ext == "cc" then
     runner_cmd = "g++ -std=c++17 " .. file .. " -o /tmp/minimal_cpp_run && /tmp/minimal_cpp_run"
+  elseif ext == "java" then
+    runner_cmd = "java " .. file
+  elseif ext == "kt" or ext == "kts" then
+    runner_cmd = "kotlinc " .. file .. " -include-runtime -d /tmp/minimal_kt.jar && java -jar /tmp/minimal_kt.jar"
+  elseif ext == "php" then
+    runner_cmd = "php " .. file
+  elseif ext == "rb" then
+    runner_cmd = "ruby " .. file
+  elseif ext == "pl" then
+    runner_cmd = "perl " .. file
+  elseif ext == "zig" then
+    runner_cmd = "zig run " .. file
+  elseif ext == "r" then
+    runner_cmd = "Rscript " .. file
+  elseif ext == "dart" then
+    runner_cmd = "dart run " .. file
+  elseif ext == "swift" then
+    runner_cmd = "swift " .. file
   elseif ext == "html" then
     runner_cmd = (vim.fn.executable("xdg-open") == 1 and "xdg-open " or "open ") .. file
   end
@@ -2947,19 +2992,54 @@ function _G.RunCurrentFile()
     end
   end
 
+  -- Wrap command with clean execution banner, status detection, and instructions
+  local wrapped_cmd = string.format(
+    "printf '\\033[1;36m▶ Running: %%s\\033[0m\\n\\n' %s; %s; code=$?; printf '\\n\\033[1;30m──────────────────────────────────────────────\\033[0m\\n'; if [ \"$code\" -eq 0 ]; then printf '\\033[1;32m✔ Process completed successfully (exit code 0)\\033[0m\\n'; else printf '\\033[1;31m✖ Process failed (exit code %%d)\\033[0m\\n' \"$code\"; fi; printf '\\033[0;90m[Press q, Esc or Ctrl+` to close drawer, F5 to re-run]\\033[0m\\n'",
+    vim.fn.shellescape(runner_cmd),
+    runner_cmd
+  )
+
+  -- Clean up any previous runner terminal window & buffer to avoid stacking
+  if _G._runner_term and type(_G._runner_term.close) == "function" and _G._runner_term:valid() then
+    pcall(function() _G._runner_term:close() end)
+    _G._runner_term = nil
+  end
+
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local b = vim.api.nvim_win_get_buf(win)
+      if vim.b[b].is_minimal_runner then
+        pcall(vim.api.nvim_win_close, win, true)
+        pcall(vim.api.nvim_buf_delete, b, { force = true })
+      end
+    end
+  end
+
   local ok, snacks = pcall(require, "snacks")
   if ok and snacks.terminal then
-    snacks.terminal.open(runner_cmd, {
-      win = { position = "bottom", height = 0.35 },
+    local term = snacks.terminal.open(wrapped_cmd, {
+      auto_close = false,
+      win = {
+        position = "bottom",
+        height = 0.35,
+        keys = {
+          q = "hide",
+          ["<Esc>"] = "hide",
+        },
+      },
     })
+    _G._runner_term = term
+    if term and term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+      vim.b[term.buf].is_minimal_runner = true
+    end
   else
-    vim.cmd("split | terminal " .. runner_cmd)
+    vim.cmd("botright split | resize 15 | terminal " .. wrapped_cmd)
   end
 end
 
-map({ "n", "i" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
-map({ "n", "i" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
-map({ "n", "i" }, "<D-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+F5)" })
+map({ "n", "i", "t" }, "<F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (F5)" })
+map({ "n", "i", "t" }, "<C-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Ctrl+F5)" })
+map({ "n", "i", "t" }, "<D-F5>", function() _G.RunCurrentFile() end, { desc = "Run Current File (Cmd+F5)" })
 vim.api.nvim_create_user_command("Run", function() _G.RunCurrentFile() end, { desc = "Run active file in terminal drawer" })
 
 -- 3. Zen / Focus Mode
