@@ -1688,23 +1688,29 @@ local function move_word_right(mode)
     return
   end
 
-  local text = cur_line:sub(col + 1)
-  local first_char = text:sub(1, 1)
-  local match_len = 0
+  local sub = cur_line:sub(col + 1)
+  -- 1. Skip any leading whitespace so cursor doesn't stall on spaces
+  local _, s_end = sub:find("^%s+")
+  local offset = s_end or 0
+  local rest = sub:sub(offset + 1)
 
-  if first_char:match("%s") then
-    local _, s_end = text:find("^%s+")
-    match_len = s_end or 1
-  elseif first_char:match("[%w_]") then
-    local _, w_end = text:find("^[%w_]+")
+  if #rest == 0 then
+    vim.api.nvim_win_set_cursor(0, { row, max_col })
+    return
+  end
+
+  -- 2. Jump directly to the END of the word or symbol group
+  local match_len = 0
+  local first_char = rest:sub(1, 1)
+  if first_char:match("[%w_]") then
+    local _, w_end = rest:find("^[%w_]+")
     match_len = w_end or 1
   else
-    local _, p_end = text:find("^[^%w_%s]+")
+    local _, p_end = rest:find("^[^%w_%s]+")
     match_len = p_end or 1
   end
 
-  if not match_len or match_len <= 0 then match_len = 1 end
-  local new_col = math.min(col + match_len, max_col)
+  local new_col = math.min(col + offset + match_len, max_col)
   vim.api.nvim_win_set_cursor(0, { row, new_col })
 end
 
@@ -1712,7 +1718,6 @@ local function move_word_left(mode)
   local cursor = vim.api.nvim_win_get_cursor(0)
   local row = cursor[1]
   local col = cursor[2]
-  local cur_line = vim.api.nvim_get_current_line()
 
   if col <= 0 then
     if row > 1 then
@@ -1724,25 +1729,30 @@ local function move_word_left(mode)
     return
   end
 
-  local text = cur_line:sub(1, col)
-  local rev_text = text:reverse()
-  local first_char = rev_text:sub(1, 1)
-  local back_len = 0
+  local cur_line = vim.api.nvim_get_current_line()
+  local sub = cur_line:sub(1, col)
+  -- 1. Skip any trailing whitespace so cursor doesn't stall on spaces
+  local trimmed = sub:gsub("%s+$", "")
+  local trimmed_len = #trimmed
 
-  if first_char:match("%s") then
-    local _, s_end = rev_text:find("^%s+")
-    back_len = s_end or 1
-  elseif first_char:match("[%w_]") then
-    local _, w_end = rev_text:find("^[%w_]+")
-    back_len = w_end or 1
-  else
-    local _, p_end = rev_text:find("^[^%w_%s]+")
-    back_len = p_end or 1
+  if trimmed_len == 0 then
+    vim.api.nvim_win_set_cursor(0, { row, 0 })
+    return
   end
 
-  if not back_len or back_len <= 0 then back_len = 1 end
-  local new_col = math.max(0, col - back_len)
-  vim.api.nvim_win_set_cursor(0, { row, new_col })
+  -- 2. Jump directly to the START of the preceding word or symbol group
+  local last_char = trimmed:sub(trimmed_len, trimmed_len)
+  local word_start = 1
+  if last_char:match("[%w_]") then
+    local s = trimmed:find("[%w_]+$")
+    word_start = s or 1
+  else
+    local s = trimmed:find("[^%w_%s]+$")
+    word_start = s or 1
+  end
+
+  local new_col = word_start - 1
+  vim.api.nvim_win_set_cursor(0, { row, math.max(0, new_col) })
 end
 
 local function select_word_right(mode)
@@ -2091,11 +2101,33 @@ map({ "n", "i" }, "<C-k>l", function() _G.TerminalCycleLayout() end, { desc = "C
 map({ "n", "i" }, "<C-k><C-t>", function() _G.TerminalSelectProfile() end, { desc = "Select Terminal Profile (Ctrl+K Ctrl+T)" })
 map({ "n", "i" }, "<C-k>p", function() _G.TerminalSelectInstance() end, { desc = "Select Active Terminal (Ctrl+K P)" })
 
--- Terminal Drawer Resize (in terminal mode)
-map("t", "<C-Up>", function() _G.TerminalResize(3) end, { desc = "Increase Terminal Height" })
-map("t", "<C-Down>", function() _G.TerminalResize(-3) end, { desc = "Decrease Terminal Height" })
-map("t", "<C-Right>", function() _G.TerminalResize(5) end, { desc = "Increase Terminal Width" })
-map("t", "<C-Left>", function() _G.TerminalResize(-5) end, { desc = "Decrease Terminal Width" })
+-- Terminal Drawer Navigation, Deletion & Height Resize (in terminal mode)
+local function send_term_bytes(bytes)
+  local chan = vim.bo.channel
+  if chan and chan > 0 then
+    vim.api.nvim_chan_send(chan, bytes)
+  end
+end
+
+-- 1. Word Navigation inside Terminal: Ctrl+Left / Ctrl+Right move to start / end of words
+map("t", "<C-Left>", function() send_term_bytes("\x1bb") end, { desc = "Move Word Left (Terminal)" })
+map("t", "<C-Right>", function() send_term_bytes("\x1bf") end, { desc = "Move Word Right (Terminal)" })
+map("t", "<M-Left>", function() send_term_bytes("\x1bb") end, { desc = "Move Word Left (Terminal)" })
+map("t", "<M-Right>", function() send_term_bytes("\x1bf") end, { desc = "Move Word Right (Terminal)" })
+map("t", "<A-Left>", function() send_term_bytes("\x1bb") end, { desc = "Move Word Left (Terminal)" })
+map("t", "<A-Right>", function() send_term_bytes("\x1bf") end, { desc = "Move Word Right (Terminal)" })
+
+-- 2. Word Deletion inside Terminal: Ctrl+Backspace deletes word to the left
+map("t", "<C-BS>", function() send_term_bytes("\x1b\x7f") end, { desc = "Delete Word Left (Terminal)" })
+map("t", "<C-Backspace>", function() send_term_bytes("\x1b\x7f") end, { desc = "Delete Word Left (Terminal)" })
+map("t", "<M-BS>", function() send_term_bytes("\x1b\x7f") end, { desc = "Delete Word Left (Terminal)" })
+map("t", "<M-Backspace>", function() send_term_bytes("\x1b\x7f") end, { desc = "Delete Word Left (Terminal)" })
+map("t", "<A-BS>", function() send_term_bytes("\x1b\x7f") end, { desc = "Delete Word Left (Terminal)" })
+map("t", "<A-Backspace>", function() send_term_bytes("\x1b\x7f") end, { desc = "Delete Word Left (Terminal)" })
+
+-- 3. Terminal Drawer Resize: ONLY Ctrl+Up and Ctrl+Down resize the terminal height!
+map("t", "<C-Up>", function() _G.TerminalResize(3) end, { desc = "Increase Terminal Height (Ctrl+Up)" })
+map("t", "<C-Down>", function() _G.TerminalResize(-3) end, { desc = "Decrease Terminal Height (Ctrl+Down)" })
 
 -- -------------------------------------------------------------------
 -- 18. HTML Boilerplate Snippet (! + Tab / Enter via blink.cmp & friendly-snippets)

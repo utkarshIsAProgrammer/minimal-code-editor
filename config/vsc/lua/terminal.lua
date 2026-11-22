@@ -232,12 +232,33 @@ function M.set_layout(layout_name)
   end
 end
 
--- Resize active terminal drawer
+-- Resize active terminal drawer (Only height for bottom layout, width for right layout)
 function M.resize(delta)
-  if M.layout == "right" then
-    vim.cmd(string.format("vertical resize %+d", delta))
+  local term_win = nil
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].buftype == "terminal" or vim.bo[buf].filetype == "snacks_terminal" then
+        term_win = win
+        break
+      end
+    end
+  end
+
+  if term_win and vim.api.nvim_win_is_valid(term_win) then
+    vim.api.nvim_win_call(term_win, function()
+      if M.layout == "right" then
+        vim.cmd(string.format("vertical resize %+d", delta))
+      else
+        vim.cmd(string.format("resize %+d", delta))
+      end
+    end)
   else
-    vim.cmd(string.format("resize %+d", delta))
+    if M.layout == "right" then
+      vim.cmd(string.format("vertical resize %+d", delta))
+    else
+      vim.cmd(string.format("resize %+d", delta))
+    end
   end
 end
 
