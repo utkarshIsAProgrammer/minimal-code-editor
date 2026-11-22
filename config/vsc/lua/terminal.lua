@@ -17,7 +17,7 @@ M.profiles = {
   {
     name = "shell",
     label = "Default Shell",
-    desc = "System interactive shell (Zsh / Bash / PowerShell)",
+    desc = "System interactive shell (Zsh / Bash / Fish)",
     icon = "🐚 ",
     cmd = nil,
   },

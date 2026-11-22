@@ -7,8 +7,7 @@
 -- Prepend config bin to PATH so embedded terminals route 'nvim', 'minimal', 'msc', 'code' to active instance
 local config_bin = vim.fn.stdpath("config") .. "/bin"
 if vim.fn.isdirectory(config_bin) == 1 then
-  local sep = vim.fn.has("win32") == 1 and ";" or ":"
-  vim.env.PATH = config_bin .. sep .. vim.env.PATH
+  vim.env.PATH = config_bin .. ":" .. vim.env.PATH
 end
 
 -- 1. Load modeless options (cursor, mouse, selection, clipboard)

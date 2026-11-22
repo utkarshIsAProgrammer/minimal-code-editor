@@ -43,8 +43,6 @@ local function open_browser(url)
     vim.fn.jobstart({ "xdg-open", url }, { detach = true })
   elseif vim.fn.executable("open") == 1 then
     vim.fn.jobstart({ "open", url }, { detach = true })
-  elseif vim.fn.has("win32") == 1 or vim.fn.has("wsl") == 1 then
-    vim.fn.jobstart({ "cmd.exe", "/c", "start", url }, { detach = true })
   end
 end
 
