@@ -19,6 +19,9 @@ opt.titlestring = "Minimal - %t"
 opt.updatetime = 300       -- Fast 300ms response for cursor hold, diagnostics & hover
 opt.mousemoveevent = false  -- Disable mouse movement tracking to prevent floating window clipping
 
+-- Session Persistence (Buffers, Working Directory, Windows, Tabs)
+opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" }
+
 -- Fast key timeout: Esc responds instantly without modal waiting/lag
 opt.timeout = true
 opt.timeoutlen = 1000 -- 1s comfortable window for VS Code multi-key chords (Ctrl+K Ctrl+T / Ctrl+K Ctrl+S)

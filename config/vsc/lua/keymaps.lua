@@ -636,6 +636,7 @@ local function setup_dashboard_buffer(buf)
     end,
     ["d"] = function() _G.CreateNewDirectory() end,
     ["o"] = function() _G.OpenFolderPicker() end,
+    ["s"] = function() if _G.RestoreSession then _G.RestoreSession() end end,
     ["r"] = function() _G.ShowRecentPicker() end,
     ["c"] = function()
       local ok, snacks = pcall(require, "snacks")
@@ -886,14 +887,29 @@ function _G.OpenFolderPicker(target_dir)
     local full = vim.fn.fnamemodify(dir_path, ":p")
 
     if vim.fn.isdirectory(full) == 1 then
+      -- Save previous workspace session before leaving
+      pcall(function()
+        if _G.SaveSession then _G.SaveSession() end
+      end)
       vim.fn.chdir(full)
       if _G.AddRecentFolder then _G.AddRecentFolder(full) end
-      vim.notify("✓ Workspace opened: " .. full, vim.log.levels.INFO, { title = "Open Folder" })
-      vim.schedule(function()
-        if ok_snacks and snacks.explorer then
-          snacks.explorer({ cwd = full })
-        end
+      -- Attempt to restore workspace session for this folder if one exists
+      local restored = false
+      pcall(function()
+        local sess = require("session")
+        restored = sess.restore_session(full)
       end)
+      if not restored then
+        vim.notify("✓ Workspace opened: " .. full, vim.log.levels.INFO, { title = "Open Folder" })
+        vim.schedule(function()
+          if ok_snacks and snacks.explorer then
+            snacks.explorer({ cwd = full })
+          end
+        end)
+      else
+        local name = vim.fn.fnamemodify(full:gsub("[/\\]+$", ""), ":t")
+        vim.notify("⚡ Restored workspace: " .. name, vim.log.levels.INFO, { title = "Open Folder" })
+      end
     elseif vim.fn.filereadable(full) == 1 then
       local parent = vim.fn.fnamemodify(full, ":h")
       vim.fn.chdir(parent)

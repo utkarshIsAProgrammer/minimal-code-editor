@@ -198,6 +198,19 @@ return {
               end,
             },
             {
+              icon = " ",
+              key = "s",
+              desc = "Restore Last Session",
+              action = function()
+                if _G.RestoreSession then
+                  _G.RestoreSession()
+                else
+                  pcall(require, "session")
+                  if _G.RestoreSession then _G.RestoreSession() end
+                end
+              end,
+            },
+            {
               icon = " ",
               key = "c",
               desc = "Command Palette (Ctrl+Shift+P)",
