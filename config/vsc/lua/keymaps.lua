@@ -1489,6 +1489,11 @@ end
 
 -- Direct buffer word deletion (100% safe, never closes files or touches normal mode)
 local function delete_word_left()
+  local mode = vim.api.nvim_get_mode().mode
+  if mode:find("^[vsVS\x16\x13]") then
+    delete_selection()
+    return
+  end
   local cursor = vim.api.nvim_win_get_cursor(0)
   local row, col = cursor[1], cursor[2]
   if col == 0 then
@@ -1520,6 +1525,11 @@ local function delete_word_left()
 end
 
 local function delete_word_right()
+  local mode = vim.api.nvim_get_mode().mode
+  if mode:find("^[vsVS\x16\x13]") then
+    delete_selection()
+    return
+  end
   local cursor = vim.api.nvim_win_get_cursor(0)
   local row, col = cursor[1], cursor[2]
   local line = vim.api.nvim_get_current_line()
@@ -1550,13 +1560,18 @@ local function delete_word_right()
 end
 
 map({ "i", "n", "x", "s" }, "<C-BS>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
-map({ "i", "n", "x", "s" }, "<C-h>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
+map({ "i", "n", "x", "s" }, "<C-Backspace>", delete_word_left, { desc = "Delete Word Left (Ctrl+Backspace)" })
 map({ "i", "n", "x", "s" }, "<M-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
+map({ "i", "n", "x", "s" }, "<M-Backspace>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
+map({ "i", "n", "x", "s" }, "<A-BS>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
+map({ "i", "n", "x", "s" }, "<A-Backspace>", delete_word_left, { desc = "Delete Word Left (Alt+Backspace)" })
 
 map({ "i", "n", "x", "s" }, "<C-Del>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
 map({ "i", "n", "x", "s" }, "<C-Delete>", delete_word_right, { desc = "Delete Word Right (Ctrl+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
+map({ "i", "n", "x", "s" }, "<A-Del>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
+map({ "i", "n", "x", "s" }, "<A-Delete>", delete_word_right, { desc = "Delete Word Right (Alt+Delete)" })
 map({ "i", "n", "x", "s" }, "<M-d>", delete_word_right, { desc = "Delete Word Right (Alt+D / Ctrl+Delete)" })
 
 -- -------------------------------------------------------------------
