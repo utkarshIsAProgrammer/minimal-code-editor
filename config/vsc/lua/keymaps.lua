@@ -1275,8 +1275,50 @@ map({ "n", "i" }, "<C-S-N>", _G.CreateNewDirectory, { desc = "New Directory (Ctr
 map({ "n", "i" }, "<C-M-n>", _G.CreateNewDirectory, { desc = "New Directory (Ctrl+Alt+N)" })
 
 map({ "n", "i" }, "<C-o>", function() _G.OpenFolderPicker() end, { desc = "Open Any Folder (Ctrl+O)" })
-map({ "n", "i" }, "<C-S-o>", function() _G.OpenFolderPicker() end, { desc = "Open Any Folder (Ctrl+Shift+O)" })
-map({ "n", "i" }, "<C-S-O>", function() _G.OpenFolderPicker() end, { desc = "Open Any Folder (Ctrl+Shift+O)" })
+map({ "n", "i" }, "<C-S-o>", function()
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.picker then snacks.picker.lsp_symbols() end
+end, { desc = "Go to Symbol in File (VS Code Ctrl+Shift+O)" })
+map({ "n", "i" }, "<C-S-O>", function()
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.picker then snacks.picker.lsp_symbols() end
+end, { desc = "Go to Symbol in File (VS Code Ctrl+Shift+O)" })
+
+-- Navigate Back & Forward (VS Code Alt+Left / Alt+Right)
+map({ "n", "i" }, "<M-Left>", "<C-o>", { desc = "Navigate Back (Alt+Left)" })
+map({ "n", "i" }, "<A-Left>", "<C-o>", { desc = "Navigate Back (Alt+Left)" })
+map({ "n", "i" }, "<M-Right>", "<C-i>", { desc = "Navigate Forward (Alt+Right)" })
+map({ "n", "i" }, "<A-Right>", "<C-i>", { desc = "Navigate Forward (Alt+Right)" })
+
+-- Quick Rename Active File (:Rename)
+vim.api.nvim_create_user_command("Rename", function(opts)
+  local cur_path = vim.api.nvim_buf_get_name(0)
+  if cur_path == "" or vim.fn.filereadable(cur_path) ~= 1 then
+    vim.notify("No active file on disk to rename", vim.log.levels.WARN, { title = "Rename File" })
+    return
+  end
+  local cur_name = vim.fn.fnamemodify(cur_path, ":t")
+  local prompt_action = function(input)
+    if input and input ~= "" and input ~= cur_name then
+      local dir = vim.fn.fnamemodify(cur_path, ":h")
+      local target = dir .. "/" .. input
+      local ok, err = pcall(vim.fn.rename, cur_path, target)
+      if ok then
+        vim.cmd("edit " .. vim.fn.fnameescape(target))
+        pcall(vim.api.nvim_buf_delete, vim.fn.bufnr(cur_path), { force = true })
+        vim.notify("✓ Renamed to: " .. input, vim.log.levels.INFO, { title = "Minimal Editor" })
+      else
+        vim.notify("Failed to rename: " .. tostring(err), vim.log.levels.ERROR, { title = "Minimal Editor" })
+      end
+    end
+  end
+
+  if opts.args and vim.trim(opts.args) ~= "" then
+    prompt_action(vim.trim(opts.args))
+  else
+    vim.ui.input({ prompt = "✏️ Rename File: ", default = cur_name }, prompt_action)
+  end
+end, { nargs = "?", desc = "Rename current active file" })
 
 -- -------------------------------------------------------------------
 -- 10. Direct Focus Switching: Sidebar, Editor, and Terminal

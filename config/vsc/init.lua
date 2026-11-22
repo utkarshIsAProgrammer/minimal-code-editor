@@ -20,9 +20,10 @@ theme_mgr.init_transparency()
 local saved_theme = theme_mgr.get_current_theme()
 pcall(vim.cmd, "colorscheme " .. saved_theme)
 
--- 3. Pre-load keymaps, recents, session, terminal & liveserver bridges so globals exist
+-- 3. Pre-load keymaps, recents, session, autosave, terminal & liveserver bridges so globals exist
 pcall(require, "recents")
 pcall(require, "session")
+pcall(require, "autosave")
 pcall(require, "terminal")
 pcall(require, "liveserver")
 pcall(require, "keymaps")
