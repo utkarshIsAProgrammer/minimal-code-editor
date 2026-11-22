@@ -741,10 +741,16 @@ vim.api.nvim_create_autocmd({ "BufLeave", "VimLeavePre" }, {
 })
 
 map({ "n", "i" }, "<C-n>", "<cmd>enew<cr><cmd>startinsert<cr>", { desc = "New File (VS Code Ctrl+N)" })
-map("n", "<C-w>", close_current_buffer, { desc = "Close Editor Tab (VS Code Ctrl+W)" })
-map({ "n", "i" }, "<C-F4>", close_current_buffer, { desc = "Close Editor Tab (Ctrl+F4)" })
-map({ "n", "i" }, "<C-S-w>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
-map({ "n", "i" }, "<C-S-W>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
+map({ "n", "i", "x", "s" }, "<C-w>", close_current_buffer, { desc = "Close Editor Tab (VS Code Ctrl+W)" })
+map({ "n", "i", "x", "s" }, "<C-W>", close_current_buffer, { desc = "Close Editor Tab (VS Code Ctrl+W)" })
+map({ "n", "i", "x", "s" }, "<M-w>", close_current_buffer, { desc = "Close Editor Tab (Alt+W)" })
+map({ "n", "i", "x", "s" }, "<A-w>", close_current_buffer, { desc = "Close Editor Tab (Alt+W)" })
+map({ "n", "i", "x", "s" }, "<C-F4>", close_current_buffer, { desc = "Close Editor Tab (Ctrl+F4)" })
+map({ "n", "i", "x", "s" }, "<C-S-w>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
+map({ "n", "i", "x", "s" }, "<C-S-W>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (VS Code Ctrl+Shift+W)" })
+map({ "n", "i", "x", "s" }, "<M-F4>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (Alt+F4)" })
+map({ "n", "i", "x", "s" }, "<A-F4>", function() _G.SmartQuit() end, { desc = "Close Window / Quit (Alt+F4)" })
+vim.api.nvim_create_user_command("Close", close_current_buffer, { desc = "Close current file / tab" })
 
 -- -------------------------------------------------------------------
 -- 9. Open Any Folder & Create Directory
