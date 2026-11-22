@@ -74,7 +74,55 @@ local function get_layout_opts()
   end
 end
 
--- Toggle active terminal instance
+-- Helper: Close any floating dashboard or popups that might obscure the terminal
+local function dismiss_covering_floats()
+  -- Ensure cursor visibility is restored if hidden on dashboard
+  io.write("\027[?25h")
+
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local ft = vim.bo[buf].filetype or ""
+      local cfg = vim.api.nvim_win_get_config(win)
+      -- Close full-screen or floating dashboard/popup (preserving explorer sidebar)
+      if cfg.relative ~= "" and (ft == "snacks_dashboard" or ft:find("dashboard")) then
+        pcall(vim.api.nvim_win_close, win, true)
+      end
+    end
+  end
+end
+
+-- Helper: Purge dead terminal buffers whose shell processes have exited
+local function cleanup_dead_terminals()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buf) and (vim.bo[buf].buftype == "terminal" or vim.bo[buf].filetype == "snacks_terminal") then
+      local chan = vim.bo[buf].channel
+      if not chan or chan <= 0 or vim.fn.jobwait({ chan }, 0)[1] ~= -1 then
+        pcall(vim.api.nvim_buf_delete, buf, { force = true })
+      end
+    end
+  end
+end
+
+-- Helper: Return focus smoothly to an active editable document buffer
+local function focus_editor_window()
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local bt = vim.bo[buf].buftype or ""
+      local ft = vim.bo[buf].filetype or ""
+      if bt == "" and ft ~= "snacks_dashboard" and not ft:find("explorer") and not ft:find("picker") then
+        vim.api.nvim_set_current_win(win)
+        if vim.bo[buf].modifiable then
+          pcall(vim.cmd, "startinsert")
+        end
+        return
+      end
+    end
+  end
+end
+
+-- Toggle or focus active terminal instance (VS Code Muscle Memory)
 function M.toggle(count, cmd)
   local id = count or M.active_id or 1
   M.active_id = id
@@ -82,14 +130,69 @@ function M.toggle(count, cmd)
     M.max_id = id
   end
 
+  local cur_win = vim.api.nvim_get_current_win()
+  local cur_buf = vim.api.nvim_get_current_buf()
+
+  -- 1. Check if any terminal window is currently visible on this tabpage
+  local term_win = nil
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].buftype == "terminal" or vim.bo[buf].filetype == "snacks_terminal" then
+        term_win = win
+        break
+      end
+    end
+  end
+
   local ok, snacks = pcall(require, "snacks")
+
+  -- 2. If terminal is ALREADY VISIBLE:
+  if term_win then
+    if cur_win == term_win then
+      -- User is ALREADY INSIDE the terminal -> hide it and return focus to editor
+      if ok and snacks.terminal then
+        local t = snacks.terminal.get(cmd, { count = id })
+        if t and t:valid() then
+          t:hide()
+        else
+          pcall(vim.api.nvim_win_close, term_win, true)
+        end
+      else
+        pcall(vim.api.nvim_win_close, term_win, true)
+      end
+      focus_editor_window()
+      return
+    else
+      -- Terminal is visible below, but focus is in editor/dashboard -> FOCUS TERMINAL!
+      dismiss_covering_floats()
+      vim.api.nvim_set_current_win(term_win)
+      vim.schedule(function()
+        pcall(vim.cmd, "startinsert")
+      end)
+      return
+    end
+  end
+
+  -- 3. Terminal is not visible: dismiss covering floats (dashboard) & purge dead buffers
+  dismiss_covering_floats()
+  cleanup_dead_terminals()
+
+  -- 4. Open fresh, active terminal instance and immediately enter terminal mode
   if ok and snacks.terminal then
-    snacks.terminal(cmd, {
+    local t = snacks.terminal.open(cmd, {
       count = id,
       win = get_layout_opts(),
     })
+    vim.schedule(function()
+      if t and t:valid() then
+        vim.api.nvim_set_current_win(t.win)
+      end
+      pcall(vim.cmd, "startinsert")
+    end)
   else
     vim.cmd("split | terminal " .. (cmd or ""))
+    pcall(vim.cmd, "startinsert")
   end
 end
 

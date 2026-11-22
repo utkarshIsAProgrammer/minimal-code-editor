@@ -58,6 +58,21 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "InsertLeave", "FocusGa
   desc = "Maintain 100% Modeless Typing in all editable documents",
 })
 
+-- Automatically enter Terminal mode whenever a terminal buffer is focused
+vim.api.nvim_create_autocmd({ "TermOpen", "BufEnter", "WinEnter" }, {
+  callback = function(args)
+    local buf = args.buf
+    if vim.api.nvim_buf_is_valid(buf) and (vim.bo[buf].buftype == "terminal" or vim.bo[buf].filetype == "snacks_terminal") then
+      vim.schedule(function()
+        if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_get_current_buf() == buf then
+          pcall(vim.cmd, "startinsert")
+        end
+      end)
+    end
+  end,
+  desc = "Automatically enter terminal mode in terminal buffers",
+})
+
 -- -------------------------------------------------------------------
 -- 1b. Neutralize Normal Mode: Typing & Clicking in Editable Buffers
 -- Any keystroke in an editable document types the character and ensures
@@ -645,8 +660,12 @@ local function setup_dashboard_buffer(buf)
     ["p"] = function() _G.SelectThemePicker() end,
     ["k"] = function() _G.EditKeybindings() end,
     ["t"] = function()
-      local ok, snacks = pcall(require, "snacks")
-      if ok and snacks.terminal then snacks.terminal() end
+      if _G.TerminalToggle then
+        _G.TerminalToggle()
+      else
+        local ok, snacks = pcall(require, "snacks")
+        if ok and snacks.terminal then snacks.terminal() end
+      end
     end,
     ["q"] = function() _G.SmartQuit() end,
     ["i"] = function()
@@ -2048,6 +2067,8 @@ map({ "n", "i" }, "<C-S-G>", function() Snacks.lazygit() end, { desc = "Git / So
 
 map({ "n", "i", "t" }, "<C-`>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (VS Code Ctrl+`)" })
 map({ "n", "i", "t" }, "<C-~>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (VS Code Ctrl+~)" })
+map({ "n", "i", "t" }, "<C-@>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (VS Code Ctrl+@)" })
+map({ "n", "i", "t" }, "<C-^>", function() _G.TerminalToggle() end, { desc = "Toggle Terminal (VS Code Ctrl+^)" })
 map({ "n", "i" }, "<C-S-t>", function() _G.TerminalNew() end, { desc = "New Terminal Instance (Ctrl+Shift+T)" })
 map({ "n", "i" }, "<D-S-t>", function() _G.TerminalNew() end, { desc = "New Terminal Instance (Cmd+Shift+T)" })
 map({ "n", "i" }, "<M-S-t>", function() _G.TerminalCycleLayout() end, { desc = "Cycle Terminal Layout (Alt+Shift+T)" })

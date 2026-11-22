@@ -237,8 +237,12 @@ return {
               key = "t",
               desc = "Terminal (Ctrl+`)",
               action = function()
-                local ok, snacks = pcall(require, "snacks")
-                if ok and snacks.terminal then snacks.terminal() end
+                if _G.TerminalToggle then
+                  _G.TerminalToggle()
+                else
+                  local ok, snacks = pcall(require, "snacks")
+                  if ok and snacks.terminal then snacks.terminal() end
+                end
               end,
             },
             {
